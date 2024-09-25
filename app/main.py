@@ -1,5 +1,6 @@
 from dotenv import load_dotenv
 from fastapi import FastAPI, Depends, Query, HTTPException
+from sqladmin import Admin, ModelView
 from sqlmodel import Session, select
 from .database import engine
 from .models import Item
@@ -13,6 +14,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = FastAPI()
+admin = Admin(app, engine)
 
 def get_session():
     with Session(engine) as session:
@@ -67,3 +69,11 @@ def add_numbers(
         return {"result": result}
     except TimeoutError:
         return {"status": "PENDING", "message": "작업이 아직 완료되지 않았습니다. 나중에 다시 시도해주세요."}
+
+
+class ItemAdmin(ModelView, model=Item):
+    column_list = [Item.id, Item.name, Item.quantity]
+    column_sortable_list = [Item.id, Item.name, Item.quantity]
+    column_searchable_list = [Item.name]
+
+admin.add_view(ItemAdmin)
