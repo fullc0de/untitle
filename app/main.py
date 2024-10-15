@@ -6,6 +6,8 @@ from .database import engine
 from .models import Item
 from celery.result import AsyncResult
 from tasks.task1 import add
+from tasks.chat_task import chat_task
+
 import logging
 
 load_dotenv()
@@ -67,6 +69,17 @@ def add_numbers(
         result = task.get(timeout=2)
         logger.info(f"Task result: {result}")
         return {"result": result}
+    except TimeoutError:
+        return {"status": "PENDING", "message": "작업이 아직 완료되지 않았습니다. 나중에 다시 시도해주세요."}
+
+
+@app.get("/chat")
+def chat(msg: str = Query(..., description="empty message")):
+    task = chat_task.delay(msg)
+    try:
+        reply = task.get(timeout=2)
+        logger.info(f"Task result: {reply}")
+        return {"reply": reply}
     except TimeoutError:
         return {"status": "PENDING", "message": "작업이 아직 완료되지 않았습니다. 나중에 다시 시도해주세요."}
 
