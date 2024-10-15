@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>채팅 테스트</title>
+</head>
+<body>
+    <h1>채팅 테스트</h1>
+    <input type="text" id="messageInput" placeholder="메시지를 입력하세요">
+    <button onclick="sendMessage()">전송</button>
+    <div id="response"></div>
+
+    <script>
+        async function sendMessage() {
+            const message = document.getElementById('messageInput').value;
+            try {
+                const response = await fetch(`/chat?msg=${encodeURIComponent(message)}`);
+                const data = await response.json();
+                document.getElementById('response').innerHTML = `응답: ${data.reply}`;
+            } catch (error) {
+                console.error('오류:', error);
+                document.getElementById('response').innerHTML = '오류가 발생했습니다.';
+            }
+        }
+    </script>
+</body>
+</html>
