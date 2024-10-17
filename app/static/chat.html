@@ -4,25 +4,64 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>채팅 테스트</title>
+    <style>
+        #chatBox {
+            height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+    </style>
 </head>
+
 <body>
     <h1>채팅 테스트</h1>
+    <div id="chatBox"></div>
     <input type="text" id="messageInput" placeholder="메시지를 입력하세요">
     <button onclick="sendMessage()">전송</button>
-    <div id="response"></div>
 
     <script>
+        const chatBox = document.getElementById('chatBox');
+        const messageInput = document.getElementById('messageInput');
+        
+        // Enter 키 이벤트 리스너 추가
+        messageInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
         async function sendMessage() {
-            const message = document.getElementById('messageInput').value;
+            const message = messageInput.value;
+            if (!message) return;
+
+            // 사용자 메시지 표시
+            appendMessage('사용자', message);
+
             try {
                 const response = await fetch(`/chat?msg=${encodeURIComponent(message)}`);
                 const data = await response.json();
-                document.getElementById('response').innerHTML = `응답: ${data.reply}`;
+                
+                // 서버 응답 표시
+                appendMessage('서버', data.reply);
             } catch (error) {
                 console.error('오류:', error);
-                document.getElementById('response').innerHTML = '오류가 발생했습니다.';
+                appendMessage('시스템', '오류가 발생했습니다.');
             }
+
+            // 입력 필드 초기화
+            messageInput.value = '';
+        }
+
+        function appendMessage(sender, message) {
+            const messageElement = document.createElement('p');
+            messageElement.textContent = `${sender}: ${message}`;
+            chatBox.appendChild(messageElement);
+            
+            // 스크롤을 항상 아래로 유지
+            chatBox.scrollTop = chatBox.scrollHeight;
         }
     </script>
 </body>
-</html>
+
