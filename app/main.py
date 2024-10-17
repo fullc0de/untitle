@@ -90,7 +90,7 @@ def add_numbers(
 
 @app.get("/chat")
 def chat(msg: str = Query(..., description="empty message")):
-    task = chat_task.delay(msg)
+    task = chat_task.delay(msg, "openai", 0.7)
     try:
         reply = task.get(timeout=2)
         logger.info(f"Task result: {reply}")
