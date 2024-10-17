@@ -1,16 +1,13 @@
 import os
 from dotenv import load_dotenv
-from fastapi import FastAPI, Depends, Query, HTTPException
-from fastapi.responses import FileResponse
+from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqladmin import Admin, ModelView
 from sqlmodel import Session, select
-from .database import engine
-from .models import Item
-from celery.result import AsyncResult
-from tasks.task1 import add
-from tasks.chat_task import chat_task
+from app.database import engine
+from app.models import Item
 from fastapi.staticfiles import StaticFiles
+from app.apis.chats import router as chats_router
 
 import logging
 
@@ -37,6 +34,13 @@ def get_session():
 
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
+app.include_router(chats_router)
+
+
+###
+# 아래 부분은 프로젝트 테스트 코드임
+###
+
 @app.get("/")
 def read_root():
     return {"Hello": "World"}
@@ -62,47 +66,6 @@ def read_item(item_id: int, session: Session = Depends(get_session)):
     if item is None:
         raise HTTPException(status_code=404, detail="Item not found")
     return item
-
-@app.get("/add")
-def add_numbers(
-    a: int = Query(..., description="첫 번째 숫자"),
-    b: int = Query(..., description="두 번째 숫자")
-):
-    try:
-        # 입력값 검증
-        a = int(a)
-        b = int(b)
-    except ValueError:
-        raise HTTPException(status_code=400, detail="a와 b는 유효한 정수여야 합니다.")
-
-    # Celery task 비동기 호출
-    logger.info(f"Calling add task with arguments: a={a}, b={b}")
-    task = add.delay(a, b)
-    logger.info(f"Task ID: {task.id}")
-
-    try:
-        result = task.get(timeout=2)
-        logger.info(f"Task result: {result}")
-        return {"result": result}
-    except TimeoutError:
-        return {"status": "PENDING", "message": "작업이 아직 완료되지 않았습니다. 나중에 다시 시도해주세요."}
-
-
-@app.get("/chat")
-def chat(msg: str = Query(..., description="empty message")):
-    task = chat_task.delay(msg, "openai", 0.7)
-    try:
-        reply = task.get(timeout=2)
-        logger.info(f"Task result: {reply}")
-        return {"reply": reply}
-    except TimeoutError:
-        return {"status": "PENDING", "message": "작업이 아직 완료되지 않았습니다. 나중에 다시 시도해주세요."}
-
-
-@app.get("/chat-test")
-async def chat_test():
-    logger.info("chat_test")
-    return FileResponse("app/static/chat.html", media_type="text/html")
 
 class ItemAdmin(ModelView, model=Item):
     column_list = [Item.id, Item.name, Item.quantity]

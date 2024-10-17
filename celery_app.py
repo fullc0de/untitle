@@ -8,7 +8,7 @@ app = Celery(
     "tasks",
     broker=os.getenv("CELERY_BROKER_URL"),
     backend=os.getenv("CELERY_RESULT_BACKEND"),
-    include=['tasks.task1', 'tasks.task2', 'tasks.chat_task']
+    include=['tasks.chat_task']
 )
 
 # 이 부분 추가
