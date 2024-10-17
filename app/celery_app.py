@@ -5,10 +5,10 @@ from celery import Celery
 load_dotenv()
 
 app = Celery(
-    "tasks",
+    "app.tasks",
     broker=os.getenv("CELERY_BROKER_URL"),
     backend=os.getenv("CELERY_RESULT_BACKEND"),
-    include=['tasks.chat_task']
+    include=['app.tasks.chat_task']
 )
 
 # 이 부분 추가

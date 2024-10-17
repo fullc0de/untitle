@@ -1,4 +1,4 @@
-from celery_app import app
+from app.celery_app import app
 import time
 import logging
 from dotenv import load_dotenv

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Query, HTTPException
 from fastapi.responses import FileResponse
 from celery.result import AsyncResult
-from tasks.chat_task import chat_task
+from app.tasks.chat_task import chat_task
 import logging
 
 
