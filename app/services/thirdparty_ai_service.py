@@ -5,6 +5,7 @@ import aiohttp
 from dotenv import load_dotenv
 from typing import Dict, List, Any
 import logging
+from anthropic import AsyncAnthropic
 
 load_dotenv()
 
@@ -45,12 +46,6 @@ class OpenAIService(AIService):
 class ClaudeService(AIService):
     def __init__(self):
         self.api_key = os.getenv("ANTHROPIC_API_KEY")
-        self.api_url = "https://api.anthropic.com/v1/messages"
-        self.headers = {
-            "Content-Type": "application/json",
-            "X-API-Key": self.api_key,
-            "anthropic-version": "2023-06-01"
-        }
         self.chat_history = ChatHistory()
 
     prompt_template = """
@@ -73,29 +68,25 @@ class ClaudeService(AIService):
         self.chat_history.add_message("user", message)
         
         messages = [
-            {"role": "assistant", "content": self.prompt_template},
             *self.chat_history.get_messages()
         ]
 
-        data = {
-            "model": "claude-3-5-sonnet-20240620",
-            "messages": messages,
-            "temperature": temperature,
-            "max_tokens": 1000,
-            "stream": False
-        }
-
-        async with aiohttp.ClientSession() as session:
-            async with session.post(self.api_url, json=data, headers=self.headers) as response:
-                if response.status == 200:
-                    result = await response.json()
-                    logger.info(f"Claude API 원본 응답: {json.dumps(result, indent=2, ensure_ascii=False)}")
-                    assistant_message = result["content"][0]["text"]
-                    self.chat_history.add_message("assistant", assistant_message)
-                    return {"message": assistant_message}
-                else:
-                    error_text = await response.text()
-                    raise Exception(f"Claude API 오류: {response.status} - {error_text}")
+        try:
+            logger.info(f"Claude API 요청: {messages}")
+            async with AsyncAnthropic(api_key=self.api_key) as client:
+                assistant_message = await client.messages.create(
+                    max_tokens=1024,
+                    system=self.prompt_template,
+                    messages=messages,
+                    model="claude-3-5-sonnet-20240620",
+                    temperature=temperature,
+                )
+            logger.info(f"Claude API 원본 응답: {assistant_message}")
+            self.chat_history.add_message("assistant", assistant_message.content[0].text)
+            return {"message": assistant_message.content[0].text}
+        except Exception as e:
+            logger.error(f"Claude API 오류: {str(e)}")
+            raise Exception(f"Claude API 오류: {str(e)}")
 
     async def clear_chat_history(self, ai_model: str):
         self.chat_history.clear()
