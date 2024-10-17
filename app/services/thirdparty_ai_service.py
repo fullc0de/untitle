@@ -3,7 +3,7 @@ import os
 import json
 import aiohttp
 from dotenv import load_dotenv
-from typing import Dict, Any
+from typing import Dict, List, Any
 import logging
 
 load_dotenv()
@@ -11,9 +11,27 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# 테스트 목적
+class ChatHistory:
+    def __init__(self):
+        self.messages: List[Dict[str, str]] = []
+
+    def add_message(self, role: str, content: str):
+        self.messages.append({"role": role, "content": content})
+
+    def get_messages(self):
+        return self.messages
+
+    def clear(self):
+        self.messages.clear()
+
+
 class AIService(ABC):
     @abstractmethod
     async def chat(self, message: str, temperature: float) -> Dict[str, Any]:
+        pass
+    @abstractmethod
+    async def clear_chat_history(self, ai_model: str):
         pass
 
 class OpenAIService(AIService):
@@ -21,6 +39,8 @@ class OpenAIService(AIService):
         # OpenAI API 호출 로직 구현
         # 실제 구현 시 aiohttp 등을 사용하여 비동기 요청 수행
         return {"message": "Hello, World!"}
+    async def clear_chat_history(self, ai_model: str):
+        pass
 
 class ClaudeService(AIService):
     def __init__(self):
@@ -31,6 +51,7 @@ class ClaudeService(AIService):
             "X-API-Key": self.api_key,
             "anthropic-version": "2023-06-01"
         }
+        self.chat_history = ChatHistory()
 
     prompt_template = """
     당신은 호시노 루비라는 가상의 아이돌 캐릭터입니다. 다음과 같은 특징을 가지고 있습니다:
@@ -47,13 +68,18 @@ class ClaudeService(AIService):
     위에서 제공한 "말투" 지시를 잘 반영하여 메시지를 생성 해 주세요.
     """
 
+
     async def chat(self, message: str, temperature: float) -> Dict[str, Any]:
+        self.chat_history.add_message("user", message)
+        
+        messages = [
+            {"role": "assistant", "content": self.prompt_template},
+            *self.chat_history.get_messages()
+        ]
+
         data = {
             "model": "claude-3-5-sonnet-20240620",
-            "messages": [
-                {"role": "assistant", "content": self.prompt_template},
-                {"role": "user", "content": message}
-            ],
+            "messages": messages,
             "temperature": temperature,
             "max_tokens": 1000,
             "stream": False
@@ -64,10 +90,15 @@ class ClaudeService(AIService):
                 if response.status == 200:
                     result = await response.json()
                     logger.info(f"Claude API 원본 응답: {json.dumps(result, indent=2, ensure_ascii=False)}")
-                    return {"message": result["content"][0]["text"]}
+                    assistant_message = result["content"][0]["text"]
+                    self.chat_history.add_message("assistant", assistant_message)
+                    return {"message": assistant_message}
                 else:
                     error_text = await response.text()
                     raise Exception(f"Claude API 오류: {response.status} - {error_text}")
+
+    async def clear_chat_history(self, ai_model: str):
+        self.chat_history.clear()
 
 class ThirdPartyAIService:
     def __init__(self):
@@ -84,3 +115,10 @@ class ThirdPartyAIService:
         response = await service.chat(message, temperature)
         
         return json.dumps(response)
+
+    async def clear_chat_history(self, ai_model: str):
+        if ai_model not in self.services:
+            raise ValueError(f"지원하지 않는 AI 모델입니다: {ai_model}")
+
+        service = self.services[ai_model]
+        await service.clear_chat_history(ai_model)
