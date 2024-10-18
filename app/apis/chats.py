@@ -11,7 +11,7 @@ router = APIRouter()
 
 @router.get("/chat")
 def chat(msg: str = Query(..., description="empty message")):
-    task = chat_task.delay(msg, "claude", 0.7)
+    task = chat_task.delay(msg, "openai", 0.7)
     try:
         reply = task.get(timeout=10)
         logger.info(f"Task result: {reply}")
