@@ -4,7 +4,7 @@ from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqladmin import Admin, ModelView
 from sqlmodel import Session, select
-from app.database import engine
+from app.database import engine, get_session
 from app.models import Item
 from fastapi.staticfiles import StaticFiles
 from app.apis.chats import router as chats_router
@@ -27,10 +27,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-def get_session():
-    with Session(engine) as session:
-        yield session
 
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 

@@ -28,6 +28,18 @@
         const chatBox = document.getElementById('chatBox');
         const messageInput = document.getElementById('messageInput');
         
+        // 페이지 로딩 시 메시지 가져오기
+        window.onload = async function() {
+            try {
+                const response = await fetch('/messages');
+                const messages = await response.json();
+                messages.forEach(msg => appendMessage(msg.sender, msg.text));
+            } catch (error) {
+                console.error('메시지 로딩 오류:', error);
+                appendMessage('시스템', '메시지를 불러오는 데 실패했습니다.');
+            }
+        };
+
         // Enter 키 이벤트 리스너 추가
         messageInput.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
@@ -67,4 +79,3 @@
         }
     </script>
 </body>
-

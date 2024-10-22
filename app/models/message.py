@@ -4,7 +4,7 @@ from enum import Enum
 
 class SenderType(str, Enum):
     user = "user"
-    bot = "bot"
+    assistant = "assistant"
 
 class Message(SQLModel, table=True):
     __tablename__ = "messages"

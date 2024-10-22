@@ -7,21 +7,19 @@ import asyncio
 from app.repositories.message_repository import MessageRepository
 from app.services.thirdparty_ai_service import ThirdPartyAIService
 import json
-from sqlalchemy.orm import sessionmaker
 
 load_dotenv()
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
 @app.task
 def chat_task(msg, ai_model="openai", temperature=0.7):
     async def async_chat():
         logger.info(f"chat: {msg}")
         try:
-            with SessionLocal() as session:
+            with Session(engine) as session:
+                logger.info(f"session: {session}")
                 message_repository = MessageRepository(session)
                 thirdparty_ai_service = ThirdPartyAIService(message_repository)
                 response = await thirdparty_ai_service.chat(ai_model, msg, temperature)

@@ -35,3 +35,13 @@ class MessageRepository:
             return True
         return False
 
+    def delete_all_messages(self):
+        self.session.query(Message).delete()
+        self.session.commit()
+
+    def get_latest_messages(self, limit: int) -> List[Message]:
+        return self.session.exec(
+            select(Message)
+            .order_by(Message.id.desc())
+            .limit(limit)
+        ).all()
