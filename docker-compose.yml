@@ -15,7 +15,6 @@ services:
       - MONGODB_URL=mongodb://user:password@mongodb:27017/vector_db
     depends_on:
       - db
-      - mongodb
 
   worker:
     build: .
@@ -31,10 +30,9 @@ services:
       - MONGODB_URL=mongodb://user:password@mongodb:27017/vector_db
     depends_on:
       - redis
-      - mongodb
 
   db:
-    image: postgres:13
+    image: pgvector/pgvector:pg16
     volumes:
       - postgres_data:/var/lib/postgresql/data
     environment:
@@ -51,18 +49,6 @@ services:
     volumes:
       - redis_data:/data
 
-  mongodb:
-    image: mongo:latest
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongodb_data:/data/db
-    environment:
-      - MONGO_INITDB_ROOT_USERNAME=user
-      - MONGO_INITDB_ROOT_PASSWORD=password
-    command: mongod --wiredTigerCacheSizeGB 1.5
-
 volumes:
   postgres_data:
   redis_data:
-  mongodb_data:

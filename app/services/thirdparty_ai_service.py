@@ -1,7 +1,5 @@
 from abc import ABC, abstractmethod
 import os
-import json
-import aiohttp
 from dotenv import load_dotenv
 from typing import Dict, List, Any
 import logging
@@ -105,6 +103,7 @@ class ThirdPartyAIService:
 
         # 사용자 메시지 저장
         self.message_repository.create_message(message, SenderType.user)
+        #await EmbeddingService().create_embedding(message)
 
         recent_messages = self.message_repository.get_latest_messages(10)
         logger.info(f"recent_messages: {recent_messages.reverse()}")
@@ -120,3 +119,20 @@ class ThirdPartyAIService:
     async def clear_chat_history(self):
         self.message_repository.delete_all_messages()
         
+
+class EmbeddingService:
+    def __init__(self):
+        self.api_key = os.getenv("OPENAI_API_KEY")
+        self.model = "text-embedding-3-large"
+
+    async def create_embedding(self, text: str) -> None:
+        try:
+            async with AsyncOpenAI(api_key=self.api_key) as client:
+                response = await client.embeddings.create(
+                    model=self.model,
+                    input=text
+                )
+                embedding = response.data[0].embedding
+                logger.info(f"임베딩 벡터: {embedding}")
+        except Exception as e:
+            logger.error(f"임베딩 생성 중 오류 발생: {str(e)}")
