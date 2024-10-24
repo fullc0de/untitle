@@ -1,8 +1,12 @@
 import os
 from dotenv import load_dotenv
 from celery import Celery
+from kombu.serialization import register
+from app.pydanticserializer import pydantic_dumps, pydantic_loads
 
 load_dotenv()
+
+register('pydantic', pydantic_dumps, pydantic_loads, content_type='application/x-pydantic', content_encoding='utf-8')
 
 app = Celery(
     "app.tasks",
@@ -13,9 +17,11 @@ app = Celery(
 
 # 이 부분 추가
 app.conf.update(
-    task_serializer='json',
-    accept_content=['json'],
-    result_serializer='json',
+    task_serializer='pydantic',
+    result_serializer='pydantic',
+    event_serializer='pydantic',
+    accept_content=['application/json', 'application/x-pydantic'],
+    result_accept_content=['application/json', 'application/x-pydantic'],
     timezone='Asia/Seoul',
     enable_utc=True,
 )
