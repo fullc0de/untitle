@@ -97,12 +97,12 @@ class ThirdPartyAIService:
         self.message_repository = message_repository
         self.prompt_context = PromptContext()
 
-    async def chat(self, ai_model: str, message: str, temperature: float = 0.7) -> Dict[str, Any]:
+    async def chat(self, ai_model: str, message: str, temperature: float = 0.7) -> Dict[str, Message]:
         if ai_model not in self.services:
             raise ValueError(f"지원하지 않는 AI 모델입니다: {ai_model}")
 
         # 사용자 메시지 저장
-        self.message_repository.create_message(message, SenderType.user)
+        user_msg = self.message_repository.create_message(message, SenderType.user)
         #await EmbeddingService().create_embedding(message)
 
         recent_messages = self.message_repository.get_latest_messages(10)
@@ -112,9 +112,9 @@ class ThirdPartyAIService:
         response = await service.chat(self.prompt_context.prompt_template, recent_messages, temperature)
         
         # AI 응답 저장
-        self.message_repository.create_message(response['message'], SenderType.assistant)
+        bot_msg = self.message_repository.create_message(response['message'], SenderType.assistant)
         
-        return response
+        return {"user": user_msg, "bot": bot_msg}
 
     async def clear_chat_history(self):
         self.message_repository.delete_all_messages()

@@ -1,6 +1,6 @@
 import json
 from pydantic import BaseModel
-from app.models import task_models
+from app import task_models
 
 class PydanticSerializer(json.JSONEncoder):   
     def default(self, obj):

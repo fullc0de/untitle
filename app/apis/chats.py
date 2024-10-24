@@ -16,7 +16,10 @@ def chat(msg: str = Query(..., description="empty message")):
     try:
         reply = task.get(timeout=10)
         logger.info(f"Task result: {reply}")
-        return {"reply": reply}
+
+        bot_msg = reply['bot']
+
+        return {"reply": bot_msg.msg}
     except TimeoutError:
         return {"status": "PENDING", "message": "작업이 아직 완료되지 않았습니다. 나중에 다시 시도해주세요."}
 
