@@ -12,7 +12,7 @@ app = Celery(
     "app.tasks",
     broker=os.getenv("CELERY_BROKER_URL"),
     backend=os.getenv("CELERY_RESULT_BACKEND"),
-    include=['app.tasks.chat_task']
+    include=['app.tasks.chat_task', 'app.tasks.msg_embedding_task']
 )
 
 # 이 부분 추가

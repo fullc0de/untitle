@@ -1,7 +1,8 @@
 from sqlmodel import Session, select
 from app.models.message import Message, SenderType
 from app.models.msg_embedding import MsgEmbedding
-from typing import List, Optional
+from typing import List, Optional, Dict
+from sqlalchemy import ARRAY
 import numpy as np
 
 class MessageRepository:
@@ -58,6 +59,13 @@ class MessageRepository:
         self.session.commit()
         self.session.refresh(chat_embedding)
         return chat_embedding
+
+    def create_embeddings(self, embeddings: Dict[int, List[float]]) -> List[MsgEmbedding]:
+        chat_embeddings = [MsgEmbedding(embedding=embedding, message_id=message_id) for message_id, embedding in embeddings.items()]
+        self.session.add_all(chat_embeddings)
+        self.session.commit()
+        created_embeddings = self.session.exec(select(MsgEmbedding).where(MsgEmbedding.message_id.in_(embeddings.keys()))).all()
+        return created_embeddings
 
     def get_embedding_by_id(self, embedding_id: int) -> Optional[MsgEmbedding]:
         return self.session.get(MsgEmbedding, embedding_id)

@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 import os
 from dotenv import load_dotenv
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Tuple
 import logging
 from anthropic import AsyncAnthropic
 from openai import AsyncOpenAI
@@ -121,18 +121,41 @@ class ThirdPartyAIService:
         
 
 class EmbeddingService:
-    def __init__(self):
+    def __init__(self, message_repository: MessageRepository):
         self.api_key = os.getenv("OPENAI_API_KEY")
         self.model = "text-embedding-3-large"
+        self.message_repository = message_repository
 
-    async def create_embedding(self, text: str) -> None:
+    async def create_msg_embedding(self, msg: str, msg_id: str) -> None:
+        try:
+            # request embeddings
+            async with AsyncOpenAI(api_key=self.api_key) as client:
+                response = await client.embeddings.create(
+                    model=self.model,
+                    input=msg
+                )
+
+            # store them into db
+            embedding_data = response.data[0].embedding
+            self.message_repository.create_embedding(embedding_data, msg_id)
+            logger.info(f"Embedding has been successfully created: corresponding msg_id: {msg_id}")
+
+        except Exception as e:
+            logger.error(f"임베딩 생성 중 오류 발생: {str(e)}")
+
+    # (int, str) = (msg_id, msg)
+    async def create_msg_embedding_batch(self, messages: List[Tuple[int, str]]) -> None:
         try:
             async with AsyncOpenAI(api_key=self.api_key) as client:
                 response = await client.embeddings.create(
                     model=self.model,
-                    input=text
+                    input=[item[1] for item in messages]
                 )
-                embedding = response.data[0].embedding
-                logger.info(f"임베딩 벡터: {embedding}")
+
+            embeddings = {}
+            for idx, item in enumerate(messages):
+                embeddings[item[0]] = response.data[idx].embedding
+            self.message_repository.create_embeddings(embeddings)
+            
         except Exception as e:
-            logger.error(f"임베딩 생성 중 오류 발생: {str(e)}")
+            logger.error(f"임베딩 생성 (배치) 중 오류 발생: {str(e)}")

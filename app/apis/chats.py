@@ -1,10 +1,11 @@
 from fastapi import APIRouter, Query, Depends
 from fastapi.responses import FileResponse
 from app.tasks.chat_task import chat_task
-import logging
+from app.tasks.msg_embedding_task import msg_embedding_task
 from app.repositories.message_repository import MessageRepository
 from sqlmodel import Session
 from app.database import get_session
+import logging
 
 logger = logging.getLogger(__name__)
 
@@ -16,12 +17,11 @@ def chat(msg: str = Query(..., description="empty message")):
     try:
         reply = task.get(timeout=10)
         logger.info(f"Task result: {reply}")
-
-        bot_msg = reply['bot']
-
-        return {"reply": bot_msg.msg}
+        msg_embedding_task.delay([reply['user'], reply['bot']])
+        return {"reply": reply['bot'].msg}
     except TimeoutError:
         return {"status": "PENDING", "message": "작업이 아직 완료되지 않았습니다. 나중에 다시 시도해주세요."}
+
 
 
 @router.get("/chat-test")
