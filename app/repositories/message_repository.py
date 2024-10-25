@@ -1,4 +1,4 @@
-from sqlmodel import Session, select
+from sqlmodel import Session, select, delete
 from app.models.message import Message, SenderType
 from app.models.msg_embedding import MsgEmbedding
 from typing import List, Optional, Dict
@@ -39,7 +39,7 @@ class MessageRepository:
         return False
 
     def delete_all_messages(self):
-        self.session.query(Message).delete()
+        self.session.exec(delete(Message))
         self.session.commit()
 
     def get_latest_messages(self, limit: int) -> List[Message]:
@@ -66,6 +66,10 @@ class MessageRepository:
         self.session.commit()
         created_embeddings = self.session.exec(select(MsgEmbedding).where(MsgEmbedding.message_id.in_(embeddings.keys()))).all()
         return created_embeddings
+
+    def delete_all_embeddings(self):
+        self.session.exec(delete(MsgEmbedding))
+        self.session.commit()
 
     def get_embedding_by_id(self, embedding_id: int) -> Optional[MsgEmbedding]:
         return self.session.get(MsgEmbedding, embedding_id)
@@ -101,6 +105,16 @@ class MessageRepository:
         
         similarities.sort(key=lambda x: x[1], reverse=True)
         return [item[0] for item in similarities[:limit]]
+
+    def delete_all_message_and_embeddings(self):
+        try:
+            self.session.begin()
+            self.session.exec(delete(Message))
+            self.session.exec(delete(MsgEmbedding))
+            self.session.commit()
+        except Exception as e:
+            self.session.rollback()
+            raise e
 
     @staticmethod
     def cosine_similarity(a: List[float], b: List[float]) -> float:
