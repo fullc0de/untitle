@@ -30,13 +30,9 @@ async def post_chats(chat_request: ChatRequest):
         msg_embedding_task.delay([MsgInfo(msg=message.text, msg_id=message.id)])
 
         # 봇 메시지 생성 요청
-        task = request_bot_msg_task.delay("openai", 0.7)
-        reply = task.get(timeout=10)
-        
-        # 봇 메시지 전송 (소켓)
-        await send_message_to_client(reply.msg)
+        request_bot_msg_task.delay("openai", 0.7)
 
-        return {"reply": reply.msg}
+        return {"result": "success"}
     except Exception as e:
         logger.error(f"Error in post_chats: {str(e)}")
 

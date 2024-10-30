@@ -9,7 +9,7 @@ from app.database import engine, get_session
 from app.models import Item
 from fastapi.staticfiles import StaticFiles
 from app.apis.chats import router as chats_router
-from app.utils.websocket import socket_app
+from app.utils.websocket import socket_app, init_redis_subscriber
 import logging
 
 load_dotenv()
@@ -65,6 +65,10 @@ def read_item(item_id: int, session: Session = Depends(get_session)):
     if item is None:
         raise HTTPException(status_code=404, detail="Item not found")
     return item
+
+@app.on_event("startup")
+async def startup_event():
+    await init_redis_subscriber(app)
 
 class ItemAdmin(ModelView, model=Item):
     column_list = [Item.id, Item.name, Item.quantity]

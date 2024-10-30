@@ -5,6 +5,8 @@ from typing import Dict
 import logging
 from dotenv import load_dotenv
 import asyncio
+import redis
+import os
 from app.repositories.message_repository import MessageRepository
 from app.services.thirdparty_ai_service import ThirdPartyAIService, EmbeddingService
 from app.task_models.msg_info import MsgInfo
@@ -15,6 +17,8 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+redis_client = redis.Redis.from_url(os.getenv("REDIS_URL", "redis://redis:6379/0"))
+
 @app.task
 def request_bot_msg_task(ai_model="openai", temperature=0.7) -> MsgInfo:
     async def async_chat():
@@ -22,8 +26,11 @@ def request_bot_msg_task(ai_model="openai", temperature=0.7) -> MsgInfo:
             with Session(engine) as session:
                 message_repository = MessageRepository(session)
                 thirdparty_ai_service = ThirdPartyAIService(message_repository)
-                
+
                 response = await thirdparty_ai_service.chat(ai_model, temperature)
+
+                # web 서버로 메시지 전송 (web 서버가 클라이언트에게 전달함)
+                redis_client.publish("chat_messages", json.dumps({"message": response.text}))
 
                 embedding_service = EmbeddingService(message_repository)
                 await embedding_service.create_msg_embedding(response.text, response.id)
