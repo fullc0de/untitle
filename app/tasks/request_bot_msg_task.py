@@ -16,20 +16,19 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 @app.task
-def request_bot_msg_task(user_msg, ai_model="openai", temperature=0.7) -> MsgInfo:
+def request_bot_msg_task(ai_model="openai", temperature=0.7) -> MsgInfo:
     async def async_chat():
-        logger.info(f"user message: {user_msg}")
         try:
             with Session(engine) as session:
-                logger.info(f"session: {session}")
                 message_repository = MessageRepository(session)
                 thirdparty_ai_service = ThirdPartyAIService(message_repository)
-                response = await thirdparty_ai_service.chat(ai_model, user_msg, temperature)
+                
+                response = await thirdparty_ai_service.chat(ai_model, temperature)
 
                 embedding_service = EmbeddingService(message_repository)
-                await embedding_service.create_msg_embedding(response['bot'].text, response['bot'].id)
+                await embedding_service.create_msg_embedding(response.text, response.id)
 
-                return MsgInfo(msg=response['bot'].text, msg_id=response['bot'].id)
+                return MsgInfo(msg=response.text, msg_id=response.id)
         except Exception as e:
             logger.error(f"Error in request_bot_msg_task: {str(e)}")
             return json.dumps({"error": str(e)})

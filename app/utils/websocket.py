@@ -2,10 +2,15 @@ import socketio
 import logging
 from typing import Optional
 import os
+from dotenv import load_dotenv
 
+load_dotenv()
+
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-sio = socketio.AsyncServer(async_mode='asgi', cors_allowed_origins=os.getenv("ALLOWED_ORIGINS"))
+allowed_origins = os.getenv("ALLOWED_ORIGINS", "").split(",")
+sio = socketio.AsyncServer(async_mode='asgi', cors_allowed_origins=allowed_origins)
 socket_app = socketio.ASGIApp(sio)
 connected_id: Optional[str] = None
 

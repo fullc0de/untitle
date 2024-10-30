@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 app = FastAPI()
 admin = Admin(app, engine)
 
-allowed_origins = os.getenv("ALLOWED_ORIGINS")
+allowed_origins = os.getenv("ALLOWED_ORIGINS", "").split(",")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
@@ -29,11 +29,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+#app.mount("/ws", socket_app)
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
-app.mount("/ws", socket_app)
 
 app.include_router(chats_router)
 
+app.mount("/", socket_app)
 
 ###
 # 아래 부분은 프로젝트 테스트 코드임

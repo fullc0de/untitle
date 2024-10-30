@@ -20,15 +20,20 @@ class ChatRequest(BaseModel):
 @router.post("/chats")
 async def post_chats(chat_request: ChatRequest):
     try:
-        # 메시지를 DB에 저장하고 임베딩 생성 태스크 실행
+        # 유저 메시지 저장
+        logger.info(f"user message: {chat_request.msg}")
         with Session(engine) as session:
             message_repository = MessageRepository(session)
             message = message_repository.create_message(chat_request.msg, "user")
-            
-        msg_embedding_task.delay([MsgInfo(msg=message.text, msg_id=message.id)])
-        task = request_bot_msg_task.delay(chat_request.msg, "openai", 0.7)
-        reply = task.get(timeout=10)
 
+        # 유저 메시지에 대한 임베딩 생성
+        msg_embedding_task.delay([MsgInfo(msg=message.text, msg_id=message.id)])
+
+        # 봇 메시지 생성 요청
+        task = request_bot_msg_task.delay("openai", 0.7)
+        reply = task.get(timeout=10)
+        
+        # 봇 메시지 전송 (소켓)
         await send_message_to_client(reply.msg)
 
         return {"reply": reply.msg}
