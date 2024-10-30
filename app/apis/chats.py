@@ -1,11 +1,13 @@
 from fastapi import APIRouter, Query, Body, Depends, HTTPException
 from fastapi.responses import FileResponse
-from app.tasks.chat_task import chat_task
+from app.tasks.request_bot_msg_task import request_bot_msg_task
 from app.tasks.msg_embedding_task import msg_embedding_task
 from app.repositories.message_repository import MessageRepository
 from sqlmodel import Session
-from app.database import get_session
+from app.database import get_session, engine
 from pydantic import BaseModel, Field
+from app.utils.websocket import send_message_to_client
+from app.task_models.msg_info import MsgInfo
 import logging
 
 logger = logging.getLogger(__name__)
@@ -16,16 +18,22 @@ class ChatRequest(BaseModel):
     msg: str = Field(..., description="empty message")
 
 @router.post("/chats")
-def post_chats(chat_request: ChatRequest):
-    task = chat_task.delay(chat_request.msg, "openai", 0.7)
+async def post_chats(chat_request: ChatRequest):
     try:
+        # 메시지를 DB에 저장하고 임베딩 생성 태스크 실행
+        with Session(engine) as session:
+            message_repository = MessageRepository(session)
+            message = message_repository.create_message(chat_request.msg, "user")
+            
+        msg_embedding_task.delay([MsgInfo(msg=message.text, msg_id=message.id)])
+        task = request_bot_msg_task.delay(chat_request.msg, "openai", 0.7)
         reply = task.get(timeout=10)
-        logger.info(f"Task result: {reply}")
-        msg_embedding_task.delay([reply['user'], reply['bot']])
-        return {"reply": reply['bot'].msg}
-    except TimeoutError:
-        return {"status": "PENDING", "message": "작업이 아직 완료되지 않았습니다. 나중에 다시 시도해주세요."}
 
+        await send_message_to_client(reply.msg)
+
+        return {"reply": reply.msg}
+    except Exception as e:
+        logger.error(f"Error in post_chats: {str(e)}")
 
 
 @router.get("/chat-test")

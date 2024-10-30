@@ -1,4 +1,5 @@
 import os
+from typing import Optional
 from dotenv import load_dotenv
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -8,7 +9,7 @@ from app.database import engine, get_session
 from app.models import Item
 from fastapi.staticfiles import StaticFiles
 from app.apis.chats import router as chats_router
-
+from app.utils.websocket import socket_app
 import logging
 
 load_dotenv()
@@ -29,6 +30,7 @@ app.add_middleware(
 )
 
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
+app.mount("/ws", socket_app)
 
 app.include_router(chats_router)
 
