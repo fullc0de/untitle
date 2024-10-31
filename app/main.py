@@ -62,9 +62,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.mount("/socket.io", socket_app)
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 app.include_router(chats_router)
-app.mount("/", socket_app)
+
 
 ###
 # 아래 부분은 프로젝트 테스트 코드임
@@ -74,9 +75,9 @@ app.mount("/", socket_app)
 def read_root():
     return {"Hello": "World"}
 
-class ItemAdmin(ModelView, model=Message):
+class MessageAdmin(ModelView, model=Message):
     column_list = [Message.id, Message.text]
     column_sortable_list = [Message.id, Message.text]
     column_searchable_list = [Message.text]
 
-admin.add_view(ItemAdmin)
+admin.add_view(MessageAdmin)
