@@ -1,11 +1,7 @@
+import os
 import socketio
 import logging
-import json
-import asyncio
-from fastapi import FastAPI
-import redis.asyncio as redis
 from typing import Optional
-import os
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -37,30 +33,3 @@ async def send_message_to_client(message: str):
         logger.info(f"메시지 전송됨: {message}")
     else:
         logger.warning("연결된 클라이언트가 없습니다.") 
-
-
-redis_client = redis.from_url(os.getenv("REDIS_URL", "redis://redis:6379/0"))
-
-async def init_redis_subscriber(app: FastAPI):
-    pubsub = redis_client.pubsub()
-    
-    async def redis_listener():
-        await pubsub.subscribe("chat_messages")
-        while True:
-            try:
-                message = await pubsub.get_message(ignore_subscribe_messages=True)
-                if message and message["type"] == "message":
-                    logger.info(f"listener message: {message}")
-                    data = json.loads(message["data"])
-                    await send_message_to_client(data["message"])
-            except Exception as e:
-                logger.error(f"Redis 구독 오류: {str(e)}")
-                await asyncio.sleep(1)
-
-    @app.on_event("startup")
-    async def start_redis_listener():
-        asyncio.create_task(redis_listener())
-    
-    @app.on_event("shutdown")
-    async def shutdown_redis():
-        await pubsub.unsubscribe()
