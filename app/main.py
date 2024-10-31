@@ -11,6 +11,7 @@ from app.models.message import Message
 from fastapi.staticfiles import StaticFiles
 from app.apis.chats import router as chats_router
 from app.utils.websocket import socket_app, send_message_to_client
+from app.admin.admin_setting import setup_admin
 import redis.asyncio as redis
 import logging
 
@@ -51,7 +52,7 @@ async def lifespan(app: FastAPI):
         pass
 
 app = FastAPI(lifespan=lifespan)
-admin = Admin(app, engine)
+admin = setup_admin(app, engine)
 
 allowed_origins = os.getenv("ALLOWED_ORIGINS", "").split(",")
 app.add_middleware(
@@ -75,9 +76,3 @@ app.include_router(chats_router)
 def read_root():
     return {"Hello": "World"}
 
-class MessageAdmin(ModelView, model=Message):
-    column_list = [Message.id, Message.text]
-    column_sortable_list = [Message.id, Message.text]
-    column_searchable_list = [Message.text]
-
-admin.add_view(MessageAdmin)
