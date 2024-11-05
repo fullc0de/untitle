@@ -109,7 +109,6 @@ class ThirdPartyAIService:
         
         # AI 응답 저장
         bot_msg = self.message_repository.create_message(response['message'], SenderType.assistant)
-        await EmbeddingService(self.message_repository).create_msg_embedding(response['message'], bot_msg.id)
 
         return bot_msg
 
