@@ -1,12 +1,10 @@
 from fastapi import APIRouter, Query, Body, Depends, HTTPException
-from fastapi.responses import FileResponse
 from app.tasks.request_bot_msg_task import request_bot_msg_task
 from app.tasks.msg_embedding_task import msg_embedding_task
 from app.repositories.message_repository import MessageRepository
 from sqlmodel import Session
 from app.database import get_session, engine
 from pydantic import BaseModel, Field
-from app.utils.websocket import send_message_to_client
 from app.task_models.msg_info import MsgInfo
 import logging
 
@@ -17,7 +15,7 @@ router = APIRouter()
 class ChatRequest(BaseModel):
     msg: str = Field(..., description="empty message")
 
-@router.post("/chats")
+@router.post("/api/chats")
 async def post_chats(chat_request: ChatRequest):
     try:
         # 유저 메시지 저장
@@ -37,20 +35,14 @@ async def post_chats(chat_request: ChatRequest):
         logger.error(f"Error in post_chats: {str(e)}")
 
 
-@router.get("/chat-test")
-async def chat_test():
-    logger.info("chat_test")
-    return FileResponse("app/static/chat.html", media_type="text/html")
-
-
-@router.get("/chats")
+@router.get("/api/chats")
 def get_chats(session: Session = Depends(get_session)):
         message_repository = MessageRepository(session)
         messages = message_repository.get_all_messages()
         return [{"sender": "사용자" if msg.sender_type == "user" else "서버", "text": msg.text} for msg in messages]
 
 
-@router.post("/reset_chats")
+@router.post("/api/reset_chats")
 def reset_chats(session: Session = Depends(get_session)):
     try:
         message_repository = MessageRepository(session)

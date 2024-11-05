@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>채팅 서비스</title>
+    <link rel="stylesheet" href="/static/css/common.css">
+    <style>
+        .button-container {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+
+        .signup-btn {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .signup-btn:hover {
+            background-color: #45a049;
+        }
+
+        .login-btn {
+            background-color: #2196F3;
+            color: white;
+        }
+
+        .login-btn:hover {
+            background-color: #1976D2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>미소녀들의 대화</h1>
+        <div class="button-container">
+            <button class="button signup-btn" onclick="location.href='/signup'">가입하기</button>
+            <button class="button login-btn" onclick="location.href='/signin'">로그인하기</button>
+        </div>
+    </div>
+</body>
+</html>

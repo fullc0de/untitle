@@ -5,15 +5,18 @@ from contextlib import asynccontextmanager
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from sqladmin import Admin, ModelView
 from app.database import engine
 from app.models.message import Message
 from fastapi.staticfiles import StaticFiles
 from app.apis.chats import router as chats_router
+from app.apis.auth import router as auth_router
 from app.utils.websocket import socket_app, send_message_to_client
 from app.admin.admin_setting import setup_admin
 import redis.asyncio as redis
 import logging
+
 
 load_dotenv()
 
@@ -66,13 +69,22 @@ app.add_middleware(
 app.mount("/socket.io", socket_app)
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 app.include_router(chats_router)
-
+app.include_router(auth_router)
 
 ###
 # 아래 부분은 프로젝트 테스트 코드임
 ###
 
 @app.get("/")
-def read_root():
-    return {"Hello": "World"}
+async def read_root():
+    return FileResponse("app/static/index.html", media_type="text/html")
 
+
+@app.get("/chat-test")
+async def chat_test():
+    logger.info("chat_test")
+    return FileResponse("app/static/chat.html", media_type="text/html")
+
+@app.get("/signup")
+async def signup_page():
+    return FileResponse("app/static/signup.html", media_type="text/html")
