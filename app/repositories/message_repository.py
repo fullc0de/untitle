@@ -106,16 +106,6 @@ class MessageRepository:
         similarities.sort(key=lambda x: x[1], reverse=True)
         return [item[0] for item in similarities[:limit]]
 
-    def delete_all_message_and_embeddings(self):
-        try:
-            self.session.begin()
-            self.session.exec(delete(Message))
-            self.session.exec(delete(MsgEmbedding))
-            self.session.commit()
-        except Exception as e:
-            self.session.rollback()
-            raise e
-
     @staticmethod
     def cosine_similarity(a: List[float], b: List[float]) -> float:
         a_np = np.array(a)

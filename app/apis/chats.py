@@ -54,7 +54,7 @@ def get_chats(session: Session = Depends(get_session)):
 def reset_chats(session: Session = Depends(get_session)):
     try:
         message_repository = MessageRepository(session)
-        message_repository.delete_all_message_and_embeddings()
+        message_repository.delete_all_messages()
         
         return {"message": "모든 채팅과 임베딩 데이터가 초기화되었습니다."}
     except Exception as e:
