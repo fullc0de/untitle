@@ -88,3 +88,7 @@ async def chat_test():
 @app.get("/signup")
 async def signup_page():
     return FileResponse("app/static/signup.html", media_type="text/html")
+
+@app.get("/signin")
+async def signin_page():
+    return FileResponse("app/static/signin.html", media_type="text/html")

@@ -28,3 +28,25 @@ class AuthRepository:
         except Exception as e:
             logger.error(f"사용자 조회 중 오류 발생: {str(e)}")
             raise 
+        
+    def update_user_token(self, user_id: int, token: str) -> User:
+        """사용자의 토큰을 업데이트합니다."""
+        try:
+            user = self.session.get(User, user_id)
+            if user:
+                user.token = token
+                self.session.commit()
+                self.session.refresh(user)
+                return user
+            return None
+        except Exception as e:
+            logger.error(f"사용자 토큰 업데이트 중 오류 발생: {str(e)}")
+            raise
+
+    def get_user_by_id(self, user_id: int) -> User | None:
+        """사용자 ID로 사용자를 조회합니다."""
+        try:
+            return self.session.get(User, user_id)
+        except Exception as e:
+            logger.error(f"사용자 조회 중 오류 발생: {str(e)}")
+            raise 

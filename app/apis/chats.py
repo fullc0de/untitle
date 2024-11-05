@@ -6,6 +6,8 @@ from sqlmodel import Session
 from app.database import get_session, engine
 from pydantic import BaseModel, Field
 from app.task_models.msg_info import MsgInfo
+from app.dependencies.auth import get_current_user
+from app.models.user import User
 import logging
 
 logger = logging.getLogger(__name__)
@@ -16,7 +18,10 @@ class ChatRequest(BaseModel):
     msg: str = Field(..., description="empty message")
 
 @router.post("/api/chats")
-async def post_chats(chat_request: ChatRequest):
+async def post_chats(
+    chat_request: ChatRequest,
+    current_user: User = Depends(get_current_user)
+):
     try:
         # 유저 메시지 저장
         logger.info(f"user message: {chat_request.msg}")
@@ -36,14 +41,20 @@ async def post_chats(chat_request: ChatRequest):
 
 
 @router.get("/api/chats")
-def get_chats(session: Session = Depends(get_session)):
-        message_repository = MessageRepository(session)
-        messages = message_repository.get_all_messages()
-        return [{"sender": "사용자" if msg.sender_type == "user" else "서버", "text": msg.text} for msg in messages]
+def get_chats(
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user)
+):
+    message_repository = MessageRepository(session)
+    messages = message_repository.get_all_messages()
+    return [{"sender": "사용자" if msg.sender_type == "user" else "서버", "text": msg.text} for msg in messages]
 
 
 @router.post("/api/reset_chats")
-def reset_chats(session: Session = Depends(get_session)):
+def reset_chats(
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user)
+):
     try:
         message_repository = MessageRepository(session)
         message_repository.delete_all_messages()

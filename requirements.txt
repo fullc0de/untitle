@@ -16,3 +16,4 @@ openai==1.51.2
 numpy==1.26.4
 python-socketio==5.11.4
 python-engineio==4.10.1
+pyjwt==2.9.0
