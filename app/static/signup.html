@@ -83,7 +83,14 @@
                 }
 
                 const data = await response.json();
+                
+                // 토큰을 로컬 스토리지에 저장
+                localStorage.setItem('token', data.token);
+
                 console.log('가입 성공:', data);
+
+                // 채팅 페이지로 리다이렉트
+                window.location.href = '/chat-test';
             } catch (error) {
                 console.error('Error:', error);
                 errorMessage.textContent = error.message;

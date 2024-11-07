@@ -21,6 +21,7 @@ class AuthService:
             # 새 사용자 생성
             new_user = self.auth_repository.create_user(
                 nickname=username,
+                password=password,
                 role={"type": "user"}  # 기본 역할 설정
             )
             
@@ -47,6 +48,9 @@ class AuthService:
             if not user:
                 raise HTTPException(status_code=401, detail="사용자를 찾을 수 없습니다.")
             
+            if not user.check_password(password):
+                raise HTTPException(status_code=401, detail="비밀번호가 일치하지 않습니다.")
+        
             return user
         
         except HTTPException:

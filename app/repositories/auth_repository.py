@@ -8,10 +8,11 @@ class AuthRepository:
     def __init__(self, session: Session):
         self.session = session
         
-    def create_user(self, nickname: str, role: dict) -> User:
+    def create_user(self, nickname: str, password: str, role: dict) -> User:
         """새로운 사용자를 생성합니다."""
         try:
             new_user = User(nickname=nickname, role=role)
+            new_user.set_password(password)
             self.session.add(new_user)
             self.session.commit()
             self.session.refresh(new_user)
