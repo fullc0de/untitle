@@ -1,6 +1,10 @@
 from sqlmodel import Session, select, delete
+from app.models.chatroom import Chatroom
+from app.models.user import User
+from app.models.bot import Bot
 from app.models.message import Message, SenderType
 from app.models.msg_embedding import MsgEmbedding
+from app.models.attendee import Attendee, AttendeeType
 from typing import List, Optional, Dict
 from sqlalchemy import ARRAY
 import numpy as np
@@ -8,6 +12,52 @@ import numpy as np
 class MessageRepository:
     def __init__(self, session: Session):
         self.session = session
+
+################################################################################
+# for chatrooms
+################################################################################
+    def create_chatroom(self) -> Chatroom:
+        chatroom = Chatroom()
+        self.session.add(chatroom)
+        self.session.commit()
+        self.session.refresh(chatroom)
+        return chatroom
+
+    def get_chatrooms_by_attendee(self, attendee: Attendee) -> List[Chatroom]:
+        stmt = select(Chatroom).join(
+            Attendee, 
+            Attendee.chatroom_id == Chatroom.id
+        ).where(
+            Attendee.attendee_id == attendee.attendee_id,
+            Attendee.attendee_type == attendee.attendee_type
+        ).distinct()
+        return self.session.exec(stmt).all()
+
+    def delete_chatroom(self, chatroom: Chatroom):
+        self.session.delete(chatroom)
+        self.session.commit()
+
+################################################################################
+# for attendees
+################################################################################
+
+    def create_user_attendee(self, chatroom: Chatroom, user: User) -> Attendee:
+        attendee = Attendee(chatroom_id=chatroom.id, attendee_id=user.id, attendee_type=AttendeeType.user)
+        self.session.add(attendee)
+        self.session.commit()
+        self.session.refresh(attendee)
+        return attendee
+    
+    def create_bot_attendee(self, chatroom: Chatroom, bot: Bot) -> Attendee:
+        attendee = Attendee(chatroom_id=chatroom.id, attendee_id=bot.id, attendee_type=AttendeeType.bot)
+        self.session.add(attendee)
+        self.session.commit()
+        self.session.refresh(attendee)
+        return attendee
+
+################################################################################
+# for messages
+################################################################################
 
     def create_message(self, text: str, sender_type: SenderType) -> Message:
         message = Message(text=text, sender_type=sender_type)
@@ -50,7 +100,7 @@ class MessageRepository:
         ).all()
 
 ################################################################################
-# for msg_embedding
+# for msg_embeddings
 ################################################################################
 
     def create_embedding(self, embedding: List[float], message_id: int) -> MsgEmbedding:
