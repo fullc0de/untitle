@@ -4,8 +4,8 @@ from typing import Optional
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy import Column
 
-class Session(SQLModel, table=True):
-    __tablename__ = "sessions"
+class Chatroom(SQLModel, table=True):
+    __tablename__ = "chatrooms"
 
     id: int = Field(default=None, primary_key=True)
     property: Optional[dict] = Field(default=None, sa_column=Column(JSONB))
