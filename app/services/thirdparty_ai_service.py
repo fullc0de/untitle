@@ -5,7 +5,7 @@ from typing import Dict, List, Any, Tuple
 import logging
 from anthropic import AsyncAnthropic
 from openai import AsyncOpenAI
-from app.repositories.message_repository import MessageRepository
+from app.repositories.chat_repository import ChatRepository
 from app.models import Message, SenderType
 
 load_dotenv()
@@ -37,7 +37,7 @@ class AIService(ABC):
         pass
 
 class OpenAIService(AIService):
-    def __init__(self, repository: MessageRepository):
+    def __init__(self, repository: ChatRepository):
         self.api_key = os.getenv("OPENAI_API_KEY")
         self.repository = repository
 
@@ -64,7 +64,7 @@ class OpenAIService(AIService):
             raise Exception(f"OpenAI API 오류: {str(e)}")
 
 class ClaudeService(AIService):
-    def __init__(self, repository: MessageRepository):
+    def __init__(self, repository: ChatRepository):
         self.api_key = os.getenv("ANTHROPIC_API_KEY")
         self.repository = repository
         
@@ -89,38 +89,38 @@ class ClaudeService(AIService):
             raise Exception(f"Claude API 오류: {str(e)}")
 
 class ThirdPartyAIService:
-    def __init__(self, message_repository: MessageRepository):
+    def __init__(self, chat_repository: ChatRepository):
         self.services = {
-            "openai": OpenAIService(message_repository),
-            "claude": ClaudeService(message_repository)
+            "openai": OpenAIService(chat_repository),
+            "claude": ClaudeService(chat_repository)
         }
-        self.message_repository = message_repository
+        self.chat_repository = chat_repository
         self.prompt_context = PromptContext()
 
     async def chat(self, ai_model: str, temperature: float = 0.7) -> Message:
         if ai_model not in self.services:
             raise ValueError(f"지원하지 않는 AI 모델입니다: {ai_model}")
 
-        recent_messages = self.message_repository.get_latest_messages(10)
+        recent_messages = self.chat_repository.get_latest_messages(10)
         logger.info(f"recent_messages: {recent_messages.reverse()}")
         
         service = self.services[ai_model]
         response = await service.chat(self.prompt_context.prompt_template, recent_messages, temperature)
         
         # AI 응답 저장
-        bot_msg = self.message_repository.create_message(response['message'], SenderType.assistant)
+        bot_msg = self.chat_repository.create_message(response['message'], SenderType.assistant)
 
         return bot_msg
 
     async def clear_chat_history(self):
-        self.message_repository.delete_all_messages()
+        self.chat_repository.delete_all_messages()
         
 
 class EmbeddingService:
-    def __init__(self, message_repository: MessageRepository):
+    def __init__(self, chat_repository: ChatRepository):
         self.api_key = os.getenv("OPENAI_API_KEY")
         self.model = "text-embedding-3-large"
-        self.message_repository = message_repository
+        self.chat_repository = chat_repository
 
     async def create_msg_embedding(self, msg: str, msg_id: str) -> None:
         try:
@@ -133,7 +133,7 @@ class EmbeddingService:
 
             # store them into db
             embedding_data = response.data[0].embedding
-            self.message_repository.create_embedding(embedding_data, msg_id)
+            self.chat_repository.create_embedding(embedding_data, msg_id)
             logger.info(f"Embedding has been successfully created: corresponding msg_id: {msg_id}")
 
         except Exception as e:
@@ -151,7 +151,7 @@ class EmbeddingService:
             embeddings = {}
             for idx, item in enumerate(messages):
                 embeddings[item[0]] = response.data[idx].embedding
-            self.message_repository.create_embeddings(embeddings)
+            self.chat_repository.create_embeddings(embeddings)
             
         except Exception as e:
             logger.error(f"임베딩 생성 (배치) 중 오류 발생: {str(e)}")

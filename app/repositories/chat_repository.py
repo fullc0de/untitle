@@ -9,7 +9,7 @@ from typing import List, Optional, Dict
 from sqlalchemy import ARRAY
 import numpy as np
 
-class MessageRepository:
+class ChatRepository:
     def __init__(self, session: Session):
         self.session = session
 
@@ -19,40 +19,45 @@ class MessageRepository:
     def create_chatroom(self) -> Chatroom:
         chatroom = Chatroom()
         self.session.add(chatroom)
-        self.session.commit()
-        self.session.refresh(chatroom)
+        self.session.flush()
         return chatroom
 
-    def get_chatrooms_by_attendee(self, attendee: Attendee) -> List[Chatroom]:
+    def get_chatrooms_by_attendee_id(self, attendee_id: int, attendee_type: AttendeeType) -> List[Chatroom]:
         stmt = select(Chatroom).join(
             Attendee, 
             Attendee.chatroom_id == Chatroom.id
         ).where(
-            Attendee.attendee_id == attendee.attendee_id,
-            Attendee.attendee_type == attendee.attendee_type
+            Attendee.attendee_id == attendee_id,
+            Attendee.attendee_type == attendee_type
         ).distinct()
         return self.session.exec(stmt).all()
 
-    def delete_chatroom(self, chatroom: Chatroom):
-        self.session.delete(chatroom)
-        self.session.commit()
+    def delete_chatroom(self, chatroom_id: int):
+        self.session.exec(delete(Chatroom).where(Chatroom.id == chatroom_id))
 
 ################################################################################
 # for attendees
 ################################################################################
 
-    def create_user_attendee(self, chatroom: Chatroom, user: User) -> Attendee:
-        attendee = Attendee(chatroom_id=chatroom.id, attendee_id=user.id, attendee_type=AttendeeType.user)
+    def create_user_attendee(self, chatroom_id: int, user_id: int) -> Attendee:
+        attendee = Attendee(chatroom_id=chatroom_id, attendee_id=user_id, attendee_type=AttendeeType.user)
         self.session.add(attendee)
-        self.session.commit()
-        self.session.refresh(attendee)
+        self.session.flush()
         return attendee
     
-    def create_bot_attendee(self, chatroom: Chatroom, bot: Bot) -> Attendee:
-        attendee = Attendee(chatroom_id=chatroom.id, attendee_id=bot.id, attendee_type=AttendeeType.bot)
+    def create_bot_attendee(self, chatroom_id: int, bot_id: int) -> Attendee:
+        attendee = Attendee(chatroom_id=chatroom_id, attendee_id=bot_id, attendee_type=AttendeeType.bot)
         self.session.add(attendee)
-        self.session.commit()
-        self.session.refresh(attendee)
+        self.session.flush()
+        return attendee
+
+    def get_attendees_by_chatroom_id(self, chatroom_id: int) -> List[Attendee]:
+        return self.session.exec(select(Attendee).where(Attendee.chatroom_id == chatroom_id)).all()
+
+    def add_attendee_to_chatroom(self, chatroom_id: int, attendee_id: int, attendee_type: AttendeeType) -> Attendee:
+        attendee = Attendee(chatroom_id=chatroom_id, attendee_id=attendee_id, attendee_type=attendee_type)
+        self.session.add(attendee)
+        self.session.flush()
         return attendee
 
 ################################################################################
@@ -62,8 +67,7 @@ class MessageRepository:
     def create_message(self, text: str, sender_type: SenderType) -> Message:
         message = Message(text=text, sender_type=sender_type)
         self.session.add(message)
-        self.session.commit()
-        self.session.refresh(message)
+        self.session.flush()
         return message
 
     def get_message_by_id(self, message_id: int) -> Optional[Message]:
@@ -76,21 +80,17 @@ class MessageRepository:
         message = self.get_message_by_id(message_id)
         if message:
             message.text = text
-            self.session.commit()
-            self.session.refresh(message)
         return message
 
     def delete_message(self, message_id: int) -> bool:
         message = self.get_message_by_id(message_id)
         if message:
             self.session.delete(message)
-            self.session.commit()
             return True
         return False
 
     def delete_all_messages(self):
         self.session.exec(delete(Message))
-        self.session.commit()
 
     def get_latest_messages(self, limit: int) -> List[Message]:
         return self.session.exec(
@@ -106,20 +106,18 @@ class MessageRepository:
     def create_embedding(self, embedding: List[float], message_id: int) -> MsgEmbedding:
         chat_embedding = MsgEmbedding(embedding=embedding, message_id=message_id)
         self.session.add(chat_embedding)
-        self.session.commit()
-        self.session.refresh(chat_embedding)
+        self.session.flush()
         return chat_embedding
 
     def create_embeddings(self, embeddings: Dict[int, List[float]]) -> List[MsgEmbedding]:
         chat_embeddings = [MsgEmbedding(embedding=embedding, message_id=message_id) for message_id, embedding in embeddings.items()]
         self.session.add_all(chat_embeddings)
-        self.session.commit()
+        self.session.flush()
         created_embeddings = self.session.exec(select(MsgEmbedding).where(MsgEmbedding.message_id.in_(embeddings.keys()))).all()
         return created_embeddings
 
     def delete_all_embeddings(self):
         self.session.exec(delete(MsgEmbedding))
-        self.session.commit()
 
     def get_embedding_by_id(self, embedding_id: int) -> Optional[MsgEmbedding]:
         return self.session.get(MsgEmbedding, embedding_id)
@@ -134,15 +132,12 @@ class MessageRepository:
         chat_embedding = self.get_embedding_by_id(embedding_id)
         if chat_embedding:
             chat_embedding.embedding = new_embedding
-            self.session.commit()
-            self.session.refresh(chat_embedding)
         return chat_embedding
 
     def delete_embedding(self, embedding_id: int) -> bool:
         chat_embedding = self.get_embedding_by_id(embedding_id)
         if chat_embedding:
             self.session.delete(chat_embedding)
-            self.session.commit()
             return True
         return False
 

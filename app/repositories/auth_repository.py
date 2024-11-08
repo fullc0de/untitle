@@ -14,8 +14,7 @@ class AuthRepository:
             new_user = User(nickname=nickname, role=role)
             new_user.set_password(password)
             self.session.add(new_user)
-            self.session.commit()
-            self.session.refresh(new_user)
+            self.session.flush()
             return new_user
         except Exception as e:
             logger.error(f"사용자 생성 중 오류 발생: {str(e)}")
@@ -36,7 +35,6 @@ class AuthRepository:
             user = self.session.get(User, user_id)
             if user:
                 user.token = token
-                self.session.commit()
                 self.session.refresh(user)
                 return user
             return None

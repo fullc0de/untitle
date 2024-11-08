@@ -4,7 +4,7 @@ from sqlmodel import Session
 import logging
 from dotenv import load_dotenv
 import asyncio
-from app.repositories.message_repository import MessageRepository
+from app.repositories.chat_repository import ChatRepository
 from app.services.thirdparty_ai_service import EmbeddingService
 from app.task_models.msg_info import MsgInfo
 from typing import List
@@ -23,8 +23,7 @@ def msg_embedding_task(msgs: List[MsgInfo]):
         try:
             with Session(engine) as session:
                 logger.info(f"session: {session}")
-                message_repository = MessageRepository(session)
-                service = EmbeddingService(message_repository)
+                service = EmbeddingService(ChatRepository(session))
                 #await asyncio.gather(*[service.create_msg_embedding(msg.msg, msg.msg_id) for msg in msgs])
                 await service.create_msg_embedding_batch([(msg.msg_id, msg.msg) for msg in msgs])
         except Exception as e:
