@@ -12,6 +12,7 @@ from app.models.message import Message
 from fastapi.staticfiles import StaticFiles
 from app.apis.chats import router as chats_router
 from app.apis.auth import router as auth_router
+from app.apis.users import router as users_router
 from app.utils.websocket import socket_app, send_message_to_client
 from app.admin.admin_setting import setup_admin
 import redis.asyncio as redis
@@ -70,6 +71,7 @@ app.mount("/socket.io", socket_app)
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 app.include_router(chats_router)
 app.include_router(auth_router)
+app.include_router(users_router)
 
 ###
 # 아래 부분은 프로젝트 테스트 코드임
@@ -92,3 +94,7 @@ async def signup_page():
 @app.get("/signin")
 async def signin_page():
     return FileResponse("app/static/signin.html", media_type="text/html")
+
+@app.get("/main")
+async def main_page():
+    return FileResponse("app/static/main.html", media_type="text/html")
