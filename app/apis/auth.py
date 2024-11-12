@@ -20,7 +20,10 @@ class SignUpResponse(BaseModel):
     token: str
 
 @router.post("/api/signup", response_model=SignUpResponse)
-async def signup(request: SignUpRequest, session: Session = Depends(get_session)):
+async def signup(
+    request: SignUpRequest, 
+    session: Session = Depends(get_session)
+):
     auth_repository = AuthRepository(session)
     auth_service = AuthService(auth_repository)
     
@@ -41,7 +44,10 @@ class SignInResponse(BaseModel):
     token: str
 
 @router.post("/api/signin", response_model=SignInResponse)
-async def signin(request: SignInRequest, session: Session = Depends(get_session)):
+async def signin(
+    request: SignInRequest, 
+    session: Session = Depends(get_session)
+):
     auth_repository = AuthRepository(session)
     auth_service = AuthService(auth_repository)
     
