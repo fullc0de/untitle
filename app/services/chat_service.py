@@ -50,3 +50,8 @@ class ChatService:
 
     def add_bot_to_chatroom(self, chatroom_id: int, bot_id: int) -> Attendee:
         return self.chat_repository.add_attendee_to_chatroom(chatroom_id, bot_id, AttendeeType.bot)
+
+
+    # Relationship loaders
+    def load_chatroom_attendees(self, chatroom: Chatroom) -> Chatroom:
+        return self.chat_repository.session.refresh(chatroom, ["attendees"])

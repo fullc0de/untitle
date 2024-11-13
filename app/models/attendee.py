@@ -1,4 +1,4 @@
-from sqlmodel import SQLModel, Field
+from sqlmodel import SQLModel, Field, Relationship
 from enum import Enum
 
 class AttendeeType(str, Enum):
@@ -11,4 +11,4 @@ class Attendee(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
     chatroom_id: int = Field(..., foreign_key="chatrooms.id", index=True)
     attendee_id: int = Field(..., index=True)
-    attendee_type: AttendeeType 
+    attendee_type: AttendeeType

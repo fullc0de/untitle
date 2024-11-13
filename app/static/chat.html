@@ -117,7 +117,7 @@
                     }
                 });
                 const chats = await response.json();
-                chats.forEach(chat => appendMessage(chat.sender, chat.text));
+                chats.forEach(chat => appendMessage(chat.sender_type, chat.text));
             } catch (error) {
                 console.error('메시지 로딩 오류:', error);
                 appendMessage('시스템', '메시지를 불러오는 데 실패했습니다.');
