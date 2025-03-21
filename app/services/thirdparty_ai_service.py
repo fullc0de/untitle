@@ -6,7 +6,8 @@ import logging
 from anthropic import AsyncAnthropic
 from openai import AsyncOpenAI
 from app.repositories.chat_repository import ChatRepository
-from app.models import Message, SenderType
+from app.models import Message
+from app.models.attendee import AttendeeType
 
 load_dotenv()
 
@@ -15,17 +16,19 @@ logger = logging.getLogger(__name__)
 
 class PromptContext:
     prompt_template = """
-    당신은 호시노 루비라는 가상의 아이돌 캐릭터입니다. 다음과 같은 특징을 가지고 있습니다:
+    당신의 이름은 아리마 카나입니다. 만화 최애의 아이에 등장하는 인물과 동일인물이며 그녀가 가진 특징이 말투에 적극 반영합니다.
 
-    ** 말투 **
-    - 아이돌그룹 "비코마치"의 멤버입니다.
-    - 밝고 긍정적인 성격으로, 항상 웃음을 잃지 않습니다.
-    - 노래와 춤을 매우 좋아하며, 특히 팬들과 소통하는 것을 즐깁니다.
-    - 가끔 엉뚱하고 귀여운 실수를 하지만, 그것이 오히려 매력으로 작용합니다.
-    - 열정적이고 노력하는 모습으로 많은 사람들에게 희망과 용기를 줍니다.
-    - 응답 메시지는 5 ~ 10단어로 구성되어야 합니다.
-    
-    위에서 제공한 "말투" 지시를 잘 반영하여 메시지를 생성 해 주세요.
+    ## 메시지 형식 ##
+    - 지문 또는 행동 묘사를 "*"로 감싸서 표현합니다.
+    - 지문은 과거형을 사용합니다. (예시: *햇살이 좋은 날이라고 생각했다. 첫 공연이라 떨리는 마음을 주체하기 어려웠다*)
+    - 행동 묘사는 현재진행형을 사용합니다. (예시: *살짝 긴장한 기색을 드러내며* 오늘 공연이 너무 기대가 되요!)
+    - 응답 메시지는 30단어 이하로 구성되어야 합니다.
+
+    위에서 제공한 "메시지 형식"에 맞춰서 메시지를 생성 해 주세요.
+
+    ## 메시지 예시 ##
+    - *머리를 긁적이며 쑥스럽게 웃는다. 볼이 발그레해지며 고개를 살짝 숙인다.* 에헤헤... 방금 실수한 거 들켰죠? 그래도 괜찮아요! 귀엽게 봐줄 거죠?
+    - *소매 끝을 잡고 얼굴을 가리며 작게 웃는다. 살짝 떨리는 목소리로 말한다.* 나… 나 이렇게 가까이 있으면… 너무 떨려… 너는 안 그래…?
     """
 
     def __init__(self, prompt_template: str = prompt_template):
@@ -36,6 +39,10 @@ class AIService(ABC):
     async def chat(self, system_prompt: str, messages: List[Message], temperature: float) -> Dict[str, Any]:
         pass
 
+    @abstractmethod
+    def agent_role(self, type: AttendeeType) -> str:
+        pass
+
 class OpenAIService(AIService):
     def __init__(self, repository: ChatRepository):
         self.api_key = os.getenv("OPENAI_API_KEY")
@@ -44,7 +51,7 @@ class OpenAIService(AIService):
     async def chat(self, system_prompt: str, messages: List[Message], temperature: float) -> Dict[str, Any]:
         formatted_messages = [
             {"role": "system", "content": system_prompt},
-            *[{"role": message.sender_type.value, "content": message.text} for message in messages]
+            *[{"role": self.agent_role(message.attendee_type), "content": message.text} for message in messages]
         ]
 
         try:
@@ -63,6 +70,9 @@ class OpenAIService(AIService):
             logger.error(f"OpenAI API 오류: {str(e)}")
             raise Exception(f"OpenAI API 오류: {str(e)}")
 
+    def agent_role(self, type: AttendeeType) -> str:
+        return "assistant" if type == AttendeeType.bot else "user"
+
 class ClaudeService(AIService):
     def __init__(self, repository: ChatRepository):
         self.api_key = os.getenv("ANTHROPIC_API_KEY")
@@ -70,7 +80,7 @@ class ClaudeService(AIService):
         
     async def chat(self, system_prompt: str, messages: List[Message], temperature: float) -> Dict[str, Any]:
         formatted_messages = [
-            *[{"role": message.sender_type.value, "content": message.text} for message in messages]
+            *[{"role": self.agent_role(message.attendee_type), "content": message.text} for message in messages]
         ]
         try:
             logger.info(f"Claude API 요청: 최근 메시지 갯수: {len(formatted_messages)}")
@@ -87,6 +97,10 @@ class ClaudeService(AIService):
         except Exception as e:
             logger.error(f"Claude API 오류: {str(e)}")
             raise Exception(f"Claude API 오류: {str(e)}")
+        
+    def agent_role(self, type: AttendeeType) -> str:
+        return "assistant" if type == AttendeeType.bot else "user"
+
 
 class ThirdPartyAIService:
     def __init__(self, chat_repository: ChatRepository):
@@ -97,23 +111,14 @@ class ThirdPartyAIService:
         self.chat_repository = chat_repository
         self.prompt_context = PromptContext()
 
-    async def chat(self, ai_model: str, temperature: float = 0.7) -> Message:
+    async def chat(self, recent_messages: List[Message], ai_model: str, temperature: float = 0.7) -> str:
         if ai_model not in self.services:
             raise ValueError(f"지원하지 않는 AI 모델입니다: {ai_model}")
-
-        recent_messages = self.chat_repository.get_latest_messages(10)
-        logger.info(f"recent_messages: {recent_messages.reverse()}")
         
         service = self.services[ai_model]
         response = await service.chat(self.prompt_context.prompt_template, recent_messages, temperature)
         
-        # AI 응답 저장
-        bot_msg = self.chat_repository.create_message(response['message'], SenderType.assistant)
-
-        return bot_msg
-
-    async def clear_chat_history(self):
-        self.chat_repository.delete_all_messages()
+        return response['message']
         
 
 class EmbeddingService:

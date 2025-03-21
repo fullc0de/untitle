@@ -74,7 +74,7 @@
 
 <body>
     <div class="chat-container">
-        <h1>채팅 테스트</h1>
+        <h1>아리마 카나</h1>
         <div id="chatBox"></div>
         <div class="input-container">
             <div class="message-input-group">
@@ -111,13 +111,13 @@
         // 페이지 로딩 시 메시지 가져오기
         window.onload = async function() {
             try {
-                const response = await fetch('/api/chats', {
+                const response = await fetch('/api/chats?chatroom_id=8', {
                     headers: {
                         'Authorization': `Bearer ${localStorage.getItem('token')}`
                     }
                 });
                 const chats = await response.json();
-                chats.forEach(chat => appendMessage(chat.sender_type, chat.text));
+                chats.forEach(chat => appendMessage(chat.sender_type === 'user' ? '사용자' : '서버', chat.text));
             } catch (error) {
                 console.error('메시지 로딩 오류:', error);
                 appendMessage('시스템', '메시지를 불러오는 데 실패했습니다.');
@@ -145,7 +145,7 @@
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${localStorage.getItem('token')}`
                     },
-                    body: JSON.stringify({ msg: message })
+                    body: JSON.stringify({ msg: message, chatroom_id: 8, sender_id: 13 })   // fixme: 13은 attendee 아이디
                 });
                 const data = await response.json();
                 
@@ -182,7 +182,8 @@
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${localStorage.getItem('token')}`
-                    }
+                    },
+                    body: JSON.stringify({ chatroom_id: 8 })   // 8은 chatroom 아이디
                 });
                 if (response.ok) {
                     chatBox.innerHTML = '';

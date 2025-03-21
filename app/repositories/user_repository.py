@@ -13,7 +13,7 @@ class UserRepository:
 
     def get_attendees_by_user_id(self, user_id: int) -> List[Attendee]:
         stmt = select(Attendee).where(
-            Attendee.attendee_id == user_id,
+            Attendee.target_id == user_id,
             Attendee.attendee_type == AttendeeType.user
         )
         return self.session.exec(stmt).all()

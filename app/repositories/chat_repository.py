@@ -2,7 +2,7 @@ from sqlmodel import Session, select, delete
 from app.models.chatroom import Chatroom
 from app.models.user import User
 from app.models.bot import Bot
-from app.models.message import Message, SenderType
+from app.models.message import Message
 from app.models.msg_embedding import MsgEmbedding
 from app.models.attendee import Attendee, AttendeeType
 from typing import List, Optional, Dict
@@ -22,12 +22,12 @@ class ChatRepository:
         self.session.flush()
         return chatroom
 
-    def get_chatrooms_by_attendee_id(self, attendee_id: int, attendee_type: AttendeeType) -> List[Chatroom]:
+    def get_chatrooms_by_target_id(self, target_id: int, attendee_type: AttendeeType) -> List[Chatroom]:
         stmt = select(Chatroom).join(
             Attendee, 
             Attendee.chatroom_id == Chatroom.id
         ).where(
-            Attendee.attendee_id == attendee_id,
+            Attendee.target_id == target_id,
             Attendee.attendee_type == attendee_type
         ).distinct()
         return self.session.exec(stmt).all()
@@ -40,22 +40,25 @@ class ChatRepository:
 ################################################################################
 
     def create_user_attendee(self, chatroom_id: int, user_id: int) -> Attendee:
-        attendee = Attendee(chatroom_id=chatroom_id, attendee_id=user_id, attendee_type=AttendeeType.user)
+        attendee = Attendee(chatroom_id=chatroom_id, target_id=user_id, attendee_type=AttendeeType.user)
         self.session.add(attendee)
         self.session.flush()
         return attendee
     
     def create_bot_attendee(self, chatroom_id: int, bot_id: int) -> Attendee:
-        attendee = Attendee(chatroom_id=chatroom_id, attendee_id=bot_id, attendee_type=AttendeeType.bot)
+        attendee = Attendee(chatroom_id=chatroom_id, target_id=bot_id, attendee_type=AttendeeType.bot)
         self.session.add(attendee)
         self.session.flush()
         return attendee
 
-    def get_attendees_by_chatroom_id(self, chatroom_id: int) -> List[Attendee]:
-        return self.session.exec(select(Attendee).where(Attendee.chatroom_id == chatroom_id)).all()
+    def get_attendees_by_chatroom_id(self, chatroom_id: int, type: Optional[AttendeeType] = None) -> List[Attendee]:
+        if type != None:
+            return self.session.exec(select(Attendee).where(Attendee.chatroom_id == chatroom_id, Attendee.attendee_type == type)).all()    
+        else:
+            return self.session.exec(select(Attendee).where(Attendee.chatroom_id == chatroom_id)).all()
 
-    def add_attendee_to_chatroom(self, chatroom_id: int, attendee_id: int, attendee_type: AttendeeType) -> Attendee:
-        attendee = Attendee(chatroom_id=chatroom_id, attendee_id=attendee_id, attendee_type=attendee_type)
+    def add_attendee_to_chatroom(self, chatroom_id: int, target_id: int, attendee_type: AttendeeType) -> Attendee:
+        attendee = Attendee(chatroom_id=chatroom_id, target_id=target_id, attendee_type=attendee_type)
         self.session.add(attendee)
         self.session.flush()
         return attendee
@@ -64,8 +67,8 @@ class ChatRepository:
 # for messages
 ################################################################################
 
-    def create_message(self, text: str, sender_type: SenderType) -> Message:
-        message = Message(text=text, sender_type=sender_type)
+    def create_message(self, text: str, chatroom_id: int, sender_id: int, sender_type: AttendeeType) -> Message:
+        message = Message(text=text, chatroom_id=chatroom_id, attendee_id=sender_id, attendee_type=sender_type)
         self.session.add(message)
         self.session.flush()
         return message
@@ -73,8 +76,8 @@ class ChatRepository:
     def get_message_by_id(self, message_id: int) -> Optional[Message]:
         return self.session.get(Message, message_id)
 
-    def get_all_messages(self) -> List[Message]:
-        return self.session.exec(select(Message)).all()
+    def get_all_messages(self, chatroom_id: int) -> List[Message]:
+        return self.session.exec(select(Message).where(Message.chatroom_id == chatroom_id)).all()
 
     def update_message(self, message_id: int, text: str) -> Optional[Message]:
         message = self.get_message_by_id(message_id)
@@ -89,12 +92,13 @@ class ChatRepository:
             return True
         return False
 
-    def delete_all_messages(self):
-        self.session.exec(delete(Message))
+    def delete_all_messages(self, chatroom_id: int):
+        self.session.exec(delete(Message).where(Message.chatroom_id == chatroom_id))
 
-    def get_latest_messages(self, limit: int) -> List[Message]:
+    def get_latest_messages(self, chatroom_id: int, limit: int) -> List[Message]:
         return self.session.exec(
             select(Message)
+            .where(Message.chatroom_id == chatroom_id)
             .order_by(Message.id.desc())
             .limit(limit)
         ).all()

@@ -10,5 +10,5 @@ class Attendee(SQLModel, table=True):
 
     id: int = Field(default=None, primary_key=True)
     chatroom_id: int = Field(..., foreign_key="chatrooms.id", index=True)
-    attendee_id: int = Field(..., index=True)
+    target_id: int = Field(..., index=True)
     attendee_type: AttendeeType

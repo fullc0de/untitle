@@ -7,8 +7,9 @@ from app.services.transaction_service import TransactionService
 from app.models.chatroom import Chatroom
 from app.models.attendee import Attendee,AttendeeType
 from app.models.user import User
+from app.models.message import Message
 from app.services import enum
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 import logging
 
 load_dotenv()
@@ -26,12 +27,12 @@ class ChatService:
     def create_chatroom(self, me_id: int, peer_id: int, peer_type: enum.AttendeeType) -> Tuple[Chatroom, Attendee, Attendee]:
         def transaction(session: Session):
             chatroom = self.chat_repository.create_chatroom()
-            a1 = self.add_user_to_chatroom(chatroom.id, me_id) 
+            a1 = self.chat_repository.add_attendee_to_chatroom(chatroom.id, me_id, AttendeeType.user)
             match peer_type:
-                case AttendeeType.bot:
-                    a2 = self.add_bot_to_chatroom(chatroom.id, peer_id)
-                case AttendeeType.user:
-                    a2 = self.add_user_to_chatroom(chatroom.id, peer_id)
+                case enum.AttendeeType.bot:
+                    a2 = self.chat_repository.add_attendee_to_chatroom(chatroom.id, peer_id, AttendeeType.bot)
+                case enum.AttendeeType.user:
+                    a2 = self.chat_repository.add_attendee_to_chatroom(chatroom.id, peer_id, AttendeeType.user)
             return chatroom, a1, a2
         
         return self.transaction_service.execute_in_transaction(transaction)
@@ -40,18 +41,22 @@ class ChatService:
         user = self.user_repository.get_attendees_by_user_id(user_id)
         if not user:
             raise HTTPException(status_code=404, detail="사용자를 찾을 수 없습니다.")
-        return self.chat_repository.get_chatrooms_by_attendee_id(user_id, AttendeeType.user)
+        return self.chat_repository.get_chatrooms_by_target_id(user_id, AttendeeType.user)
     
-    def get_attendees_by_chatroom_id(self, chatroom_id: int) -> List[Attendee]:
-        return self.chat_repository.get_attendees_by_chatroom_id(chatroom_id)
+    def get_attendees_by_chatroom_id(self, chatroom_id: int, type: Optional[AttendeeType] = None) -> List[Attendee]:
+        return self.chat_repository.get_attendees_by_chatroom_id(chatroom_id, type)
     
-    def add_user_to_chatroom(self, chatroom_id: int, user_id: int) -> Attendee:
-        return self.chat_repository.add_attendee_to_chatroom(chatroom_id, user_id, AttendeeType.user)
-
-    def add_bot_to_chatroom(self, chatroom_id: int, bot_id: int) -> Attendee:
-        return self.chat_repository.add_attendee_to_chatroom(chatroom_id, bot_id, AttendeeType.bot)
-
-
     # Relationship loaders
     def load_chatroom_attendees(self, chatroom: Chatroom) -> Chatroom:
         return self.chat_repository.session.refresh(chatroom, ["attendees"])
+    
+    def create_message(self, text: str, chatroom_id: int, sender_id: int, sender_type: AttendeeType) -> Message:
+        def transaction(session: Session):
+            msg = self.chat_repository.create_message(text, chatroom_id, sender_id, sender_type)
+            return msg
+        return self.transaction_service.execute_in_transaction(transaction)
+    
+    def delete_all_messages(self, chatroom_id: int):
+        def transaction(session: Session):
+            self.chat_repository.delete_all_messages(chatroom_id)
+        return self.transaction_service.execute_in_transaction(transaction)

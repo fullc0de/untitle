@@ -8,12 +8,11 @@ from app.services.transaction_service import TransactionService
 from app.services.chat_service import ChatService
 from sqlmodel import Session
 from app.database import get_session, engine
-from pydantic import BaseModel, Field, field_validator, field_serializer
+from pydantic import BaseModel, Field, field_validator
 from app.task_models.msg_info import MsgInfo
 from app.dependencies.auth import get_current_user
 from app.models.user import User
 from app.models.attendee import Attendee, AttendeeType
-from app.models.message import SenderType
 from app.apis import enum as api_enum
 from typing import List, Dict, Any, Literal, Optional
 import logging
@@ -65,19 +64,21 @@ def get_chatrooms(
 
 
 class ChatParam(BaseModel):
+    chatroom_id: int
+    sender_id: int
     msg: str
 
 class ChatResp(BaseModel):
     id: int
     text: str
     chatroom_id: int
-    sender_type: api_enum.SenderType
+    attendee_type: api_enum.SenderType = Field(serialization_alias="sender_type")
     created_at: datetime
 
-    @field_validator("sender_type", mode="before")
+    @field_validator("attendee_type", mode="before")
     @classmethod
-    def convert_sender_type(cls, v: SenderType) -> api_enum.SenderType:
-        if v == SenderType.user:
+    def convert_attendee_type(cls, v: AttendeeType) -> api_enum.SenderType:
+        if v == AttendeeType.user:
             return api_enum.SenderType.user
         else:
             return api_enum.SenderType.bot
@@ -92,14 +93,16 @@ async def post_chats(
     try:
         # 유저 메시지 저장
         logger.info(f"user message: {chat_param.msg}")
-        chat_repository = ChatRepository(session)
-        message = chat_repository.create_message(chat_param.msg, "user")
+        logger.info(f"attendee_id: {chat_param.sender_id}")
+        logger.info(f"chatroom_id: {chat_param.chatroom_id}")
+        chat_service = ChatService(TransactionService(session))
+        message = chat_service.create_message(chat_param.msg, chat_param.chatroom_id, chat_param.sender_id, AttendeeType.user)
 
-        # 유저 메시지에 대한 임베딩 생성
-        msg_embedding_task.delay([MsgInfo(msg=message.text, msg_id=message.id)])
+        # # 유저 메시지에 대한 임베딩 생성
+        # msg_embedding_task.delay([MsgInfo(msg=message.text, msg_id=message.id)])
 
         # 봇 메시지 생성 요청
-        request_bot_msg_task.delay("openai", 0.7)
+        request_bot_msg_task.delay(chat_param.chatroom_id, "openai", 0.7)
 
         return message
     except Exception as e:
@@ -108,23 +111,24 @@ async def post_chats(
 
 @router.get("/api/chats", response_model=List[ChatResp])
 def get_chats(
+    chatroom_id: int,
     current_user: User = Depends(get_current_user),
     session: Session = Depends(get_session)
 ):
     chat_repository = ChatRepository(session)
-    messages = chat_repository.get_all_messages()
+    messages = chat_repository.get_all_messages(chatroom_id)
     return messages
 
 
 @router.post("/api/reset_chats")
 def reset_chats(
+    chatroom_id: int,
     current_user: User = Depends(get_current_user),
     session: Session = Depends(get_session)
 ):
     try:
-        chat_repository = ChatRepository(session)
-        chat_repository.delete_all_messages()
-        
+        chat_service = ChatService(TransactionService(session))
+        chat_service.delete_all_messages(chatroom_id)        
         return {"message": "모든 채팅과 임베딩 데이터가 초기화되었습니다."}
     except Exception as e:
         logger.error(f"채팅 초기화 중 오류 발생: {str(e)}")
