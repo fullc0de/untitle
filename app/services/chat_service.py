@@ -10,6 +10,7 @@ from app.models.user import User
 from app.models.message import Message
 from app.services import enum
 from typing import List, Tuple, Optional
+from app.tasks.request_bot_msg_task import request_bot_msg_task
 import logging
 
 load_dotenv()
@@ -42,14 +43,20 @@ class ChatService:
         if not user:
             raise HTTPException(status_code=404, detail="사용자를 찾을 수 없습니다.")
         return self.chat_repository.get_chatrooms_by_target_id(user_id, AttendeeType.user)
-    
-    def get_attendees_by_chatroom_id(self, chatroom_id: int, type: Optional[AttendeeType] = None) -> List[Attendee]:
-        return self.chat_repository.get_attendees_by_chatroom_id(chatroom_id, type)
-    
+        
     # Relationship loaders
     def load_chatroom_attendees(self, chatroom: Chatroom) -> Chatroom:
         return self.chat_repository.session.refresh(chatroom, ["attendees"])
     
+    def make_turn(self, text: str, chatroom_id: int, sender_id: int, sender_type: AttendeeType) -> Message:
+        def transaction(session: Session):
+            msg = self.chat_repository.create_message(text, chatroom_id, sender_id, sender_type)
+            attendees = self.chat_repository.get_attendees_by_chatroom_id(chatroom_id, AttendeeType.bot)
+            bot_attendee_id = attendees[0].id
+            request_bot_msg_task.delay(chatroom_id, bot_attendee_id, 0.7)
+            return msg
+        return self.transaction_service.execute_in_transaction(transaction)
+
     def create_message(self, text: str, chatroom_id: int, sender_id: int, sender_type: AttendeeType) -> Message:
         def transaction(session: Session):
             msg = self.chat_repository.create_message(text, chatroom_id, sender_id, sender_type)

@@ -44,9 +44,9 @@ class AIService(ABC):
         pass
 
 class OpenAIService(AIService):
-    def __init__(self, repository: ChatRepository):
+    def __init__(self, model: str):
         self.api_key = os.getenv("OPENAI_API_KEY")
-        self.repository = repository
+        self.model = model
 
     async def chat(self, system_prompt: str, messages: List[Message], temperature: float) -> Dict[str, Any]:
         formatted_messages = [
@@ -61,7 +61,7 @@ class OpenAIService(AIService):
                 assistant_message = await client.chat.completions.create(
                     max_tokens=1024,
                     messages=formatted_messages,
-                    model="gpt-4o-mini",
+                    model= self.model, #"gpt-4o-mini",
                     temperature=temperature,
                 )
             logger.info(f"OpenAI API 원본 응답: {assistant_message}")
@@ -74,9 +74,9 @@ class OpenAIService(AIService):
         return "assistant" if type == AttendeeType.bot else "user"
 
 class ClaudeService(AIService):
-    def __init__(self, repository: ChatRepository):
+    def __init__(self, model: str):
         self.api_key = os.getenv("ANTHROPIC_API_KEY")
-        self.repository = repository
+        self.model = model
         
     async def chat(self, system_prompt: str, messages: List[Message], temperature: float) -> Dict[str, Any]:
         formatted_messages = [
@@ -89,7 +89,7 @@ class ClaudeService(AIService):
                     max_tokens=1024,
                     system=system_prompt,
                     messages=formatted_messages,
-                    model="claude-3-5-sonnet-20240620",
+                    model=self.model, #"claude-3-5-sonnet-20240620",
                     temperature=temperature,
             )
             logger.info(f"Claude API 원본 응답: {assistant_message}")
@@ -103,19 +103,17 @@ class ClaudeService(AIService):
 
 
 class ThirdPartyAIService:
-    def __init__(self, chat_repository: ChatRepository):
-        self.services = {
-            "openai": OpenAIService(chat_repository),
-            "claude": ClaudeService(chat_repository)
-        }
-        self.chat_repository = chat_repository
+    def __init__(self):
         self.prompt_context = PromptContext()
 
     async def chat(self, recent_messages: List[Message], ai_model: str, temperature: float = 0.7) -> str:
-        if ai_model not in self.services:
+        if "gpt" in ai_model:
+            service = OpenAIService(ai_model)
+        elif "claude" in ai_model:
+            service = ClaudeService(ai_model)
+        else:
             raise ValueError(f"지원하지 않는 AI 모델입니다: {ai_model}")
-        
-        service = self.services[ai_model]
+
         response = await service.chat(self.prompt_context.prompt_template, recent_messages, temperature)
         
         return response['message']

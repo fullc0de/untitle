@@ -1,9 +1,9 @@
 from datetime import datetime
 from fastapi import APIRouter, Query, Body, Depends, HTTPException
-from app.tasks.request_bot_msg_task import request_bot_msg_task
-from app.tasks.msg_embedding_task import msg_embedding_task
+# from app.tasks.request_bot_msg_task import request_bot_msg_task
+# from app.tasks.msg_embedding_task import msg_embedding_task
 from app.repositories.chat_repository import ChatRepository
-from app.repositories.user_repository import UserRepository
+# from app.repositories.user_repository import UserRepository
 from app.services.transaction_service import TransactionService
 from app.services.chat_service import ChatService
 from sqlmodel import Session
@@ -96,13 +96,14 @@ async def post_chats(
         logger.info(f"attendee_id: {chat_param.sender_id}")
         logger.info(f"chatroom_id: {chat_param.chatroom_id}")
         chat_service = ChatService(TransactionService(session))
-        message = chat_service.create_message(chat_param.msg, chat_param.chatroom_id, chat_param.sender_id, AttendeeType.user)
+        message = chat_service.make_turn(chat_param.msg, chat_param.chatroom_id, chat_param.sender_id, AttendeeType.user)
 
         # # 유저 메시지에 대한 임베딩 생성
         # msg_embedding_task.delay([MsgInfo(msg=message.text, msg_id=message.id)])
 
         # 봇 메시지 생성 요청
-        request_bot_msg_task.delay(chat_param.chatroom_id, "openai", 0.7)
+        # request_bot_msg_task.delay(chat_param.chatroom_id, "gpt-4o-mini", 0.7)
+        # request_bot_msg_task.delay(chat_param.chatroom_id, "claude-3-5-sonnet-20240620", 0.7)
 
         return message
     except Exception as e:

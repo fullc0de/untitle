@@ -1,5 +1,5 @@
 from sqlmodel import Session, select
-from app.models import User
+from app.models import User, Bot
 from app.models.attendee import Attendee, AttendeeType
 from typing import List
 
@@ -17,3 +17,7 @@ class UserRepository:
             Attendee.attendee_type == AttendeeType.user
         )
         return self.session.exec(stmt).all()
+    
+    def get_bot_by_attendee_id(self, attendee_id: int) -> Bot | None:
+        stmt = select(Bot).join(Attendee, Attendee.target_id == Bot.id).where(Attendee.id == attendee_id)
+        return self.session.exec(stmt).first()
