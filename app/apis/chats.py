@@ -93,7 +93,7 @@ async def post_chats(
         logger.info(f"attendee_id: {chat_param.sender_id}")
         logger.info(f"chatroom_id: {chat_param.chatroom_id}")
         chat_service = ChatService(session, ChatRepository(session), UserRepository(session))
-        message = chat_service.make_turn(chat_param.msg, chat_param.chatroom_id, chat_param.sender_id, AttendeeType.user)
+        message = chat_service.make_turn("히쓰: " +chat_param.msg, chat_param.chatroom_id, chat_param.sender_id, AttendeeType.user)
 
         return message
     except Exception as e:
