@@ -24,9 +24,7 @@ async def signup(
     request: SignUpRequest, 
     session: Session = Depends(get_session)
 ):
-    auth_repository = AuthRepository(session)
-    auth_service = AuthService(auth_repository)
-    
+    auth_service = AuthService(session, AuthRepository(session))
     result = await auth_service.signup(
         username=request.username,
         password=request.password
@@ -48,9 +46,7 @@ async def signin(
     request: SignInRequest, 
     session: Session = Depends(get_session)
 ):
-    auth_repository = AuthRepository(session)
-    auth_service = AuthService(auth_repository)
-    
+    auth_service = AuthService(session, AuthRepository(session))
     result = await auth_service.signin(
         username=request.username,
         password=request.password

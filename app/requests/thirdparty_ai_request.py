@@ -34,7 +34,7 @@ class PromptContext:
     def __init__(self, prompt_template: str = prompt_template):
         self.prompt_template = prompt_template
 
-class AIService(ABC):
+class AIRequest(ABC):
     @abstractmethod
     async def chat(self, system_prompt: str, messages: List[Message], temperature: float) -> Dict[str, Any]:
         pass
@@ -43,7 +43,7 @@ class AIService(ABC):
     def agent_role(self, type: AttendeeType) -> str:
         pass
 
-class OpenAIService(AIService):
+class OpenAIRequest(AIRequest):
     def __init__(self, model: str):
         self.api_key = os.getenv("OPENAI_API_KEY")
         self.model = model
@@ -73,7 +73,7 @@ class OpenAIService(AIService):
     def agent_role(self, type: AttendeeType) -> str:
         return "assistant" if type == AttendeeType.bot else "user"
 
-class ClaudeService(AIService):
+class ClaudeRequest(AIRequest):
     def __init__(self, model: str):
         self.api_key = os.getenv("ANTHROPIC_API_KEY")
         self.model = model
@@ -102,15 +102,15 @@ class ClaudeService(AIService):
         return "assistant" if type == AttendeeType.bot else "user"
 
 
-class ThirdPartyAIService:
-    def __init__(self):
-        self.prompt_context = PromptContext()
+class ThirdPartyAIRequest:
+    def __init__(self, prompt_context: PromptContext):
+        self.prompt_context = prompt_context
 
     async def chat(self, recent_messages: List[Message], ai_model: str, temperature: float = 0.7) -> str:
         if "gpt" in ai_model:
-            service = OpenAIService(ai_model)
+            service = OpenAIRequest(ai_model)
         elif "claude" in ai_model:
-            service = ClaudeService(ai_model)
+            service = ClaudeRequest(ai_model)
         else:
             raise ValueError(f"지원하지 않는 AI 모델입니다: {ai_model}")
 
@@ -119,7 +119,7 @@ class ThirdPartyAIService:
         return response['message']
         
 
-class EmbeddingService:
+class EmbeddingRequest:
     def __init__(self, chat_repository: ChatRepository):
         self.api_key = os.getenv("OPENAI_API_KEY")
         self.model = "text-embedding-3-large"

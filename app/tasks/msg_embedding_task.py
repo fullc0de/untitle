@@ -5,7 +5,7 @@ import logging
 from dotenv import load_dotenv
 import asyncio
 from app.repositories.chat_repository import ChatRepository
-from app.services.thirdparty_ai_service import EmbeddingService
+from app.requests.thirdparty_ai_request import EmbeddingRequest
 from app.task_models.msg_info import MsgInfo
 from typing import List
 
@@ -23,9 +23,9 @@ def msg_embedding_task(msgs: List[MsgInfo]):
         try:
             with Session(engine) as session:
                 logger.info(f"session: {session}")
-                service = EmbeddingService(ChatRepository(session))
+                request = EmbeddingRequest(ChatRepository(session))
                 #await asyncio.gather(*[service.create_msg_embedding(msg.msg, msg.msg_id) for msg in msgs])
-                await service.create_msg_embedding_batch([(msg.msg_id, msg.msg) for msg in msgs])
+                await request.create_msg_embedding_batch([(msg.msg_id, msg.msg) for msg in msgs])
         except Exception as e:
             logger.error(f"Error in chat_embedding_task: {str(e)}")
 

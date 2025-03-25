@@ -1,10 +1,7 @@
 from datetime import datetime
 from fastapi import APIRouter, Query, Body, Depends, HTTPException
-# from app.tasks.request_bot_msg_task import request_bot_msg_task
-# from app.tasks.msg_embedding_task import msg_embedding_task
 from app.repositories.chat_repository import ChatRepository
-# from app.repositories.user_repository import UserRepository
-from app.services.transaction_service import TransactionService
+from app.repositories.user_repository import UserRepository
 from app.services.chat_service import ChatService
 from sqlmodel import Session
 from app.database import get_session, engine
@@ -38,7 +35,7 @@ def create_chatroom(
     session: Session = Depends(get_session)
 ):
     try:
-        chat_service = ChatService(TransactionService(session))
+        chat_service = ChatService(session, ChatRepository(session), UserRepository(session))
         chatroom, a1, a2 = chat_service.create_chatroom(current_user.id, attendee.id, attendee.role)
         return chatroom
             
@@ -56,7 +53,7 @@ def get_chatrooms(
     session: Session = Depends(get_session)
 ):
     try:
-        chat_service = ChatService(TransactionService(session))
+        chat_service = ChatService(session, ChatRepository(session), UserRepository(session))
         chatrooms = chat_service.get_chatrooms_by_user_id(current_user.id)
         return chatrooms
     except Exception as e:
@@ -95,15 +92,8 @@ async def post_chats(
         logger.info(f"user message: {chat_param.msg}")
         logger.info(f"attendee_id: {chat_param.sender_id}")
         logger.info(f"chatroom_id: {chat_param.chatroom_id}")
-        chat_service = ChatService(TransactionService(session))
+        chat_service = ChatService(session, ChatRepository(session), UserRepository(session))
         message = chat_service.make_turn(chat_param.msg, chat_param.chatroom_id, chat_param.sender_id, AttendeeType.user)
-
-        # # 유저 메시지에 대한 임베딩 생성
-        # msg_embedding_task.delay([MsgInfo(msg=message.text, msg_id=message.id)])
-
-        # 봇 메시지 생성 요청
-        # request_bot_msg_task.delay(chat_param.chatroom_id, "gpt-4o-mini", 0.7)
-        # request_bot_msg_task.delay(chat_param.chatroom_id, "claude-3-5-sonnet-20240620", 0.7)
 
         return message
     except Exception as e:
@@ -128,7 +118,7 @@ def reset_chats(
     session: Session = Depends(get_session)
 ):
     try:
-        chat_service = ChatService(TransactionService(session))
+        chat_service = ChatService(session, ChatRepository(session), UserRepository(session))
         chat_service.delete_all_messages(chatroom_id)        
         return {"message": "모든 채팅과 임베딩 데이터가 초기화되었습니다."}
     except Exception as e:
