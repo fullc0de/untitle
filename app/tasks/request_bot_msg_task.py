@@ -30,7 +30,7 @@ def request_bot_msg_task(chatroom_id: int, bot_attendee_id: int, temperature=0.7
                 chat_repository = ChatRepository(session)
 
                 bot = user_repository.get_bot_by_attendee_id(bot_attendee_id)
-                ai_model = bot.ai_model
+                ai_model = "gemini-2.0-flash-001" #bot.ai_model
                 logger.info(f"bot name: {bot.name}")
                 logger.info(f"ai_model: {ai_model}")
 
