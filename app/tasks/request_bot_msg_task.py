@@ -12,6 +12,7 @@ from app.repositories.user_repository import UserRepository
 from app.requests.thirdparty_ai_request import ThirdPartyAIRequest, EmbeddingRequest, PromptContext
 from app.models.attendee import AttendeeType
 from app.task_models.msg_info import MsgInfo
+import app.prompts as prompts
 import json
 
 load_dotenv()
@@ -38,7 +39,7 @@ def request_bot_msg_task(chatroom_id: int, bot_attendee_id: int, temperature=0.7
                 logger.info(f"recent_messages: {recent_messages.reverse()}")
 
                 prompt_context = PromptContext()
-                #prompt_context.prompt_template = bot.property["prompt"]
+                prompt_context.prompt_template = prompts.prompt_multiple_persona_template
                 logger.info(f"prompt_context: {prompt_context.prompt_template}")
 
                 ai_request = ThirdPartyAIRequest(prompt_context)
