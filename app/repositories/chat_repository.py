@@ -5,6 +5,7 @@ from app.models.bot import Bot
 from app.models.message import Message
 from app.models.msg_embedding import MsgEmbedding
 from app.models.attendee import Attendee, AttendeeType
+from app.models.user_persona import UserPersona
 from typing import List, Optional, Dict
 from sqlalchemy import ARRAY
 import numpy as np
@@ -66,6 +67,9 @@ class ChatRepository:
         self.session.flush()
         return attendee
 
+    def get_user_persona_by_attendee_id(self, attendee_id: int) -> UserPersona:
+        return self.session.exec(select(UserPersona).where(UserPersona.attendee_id == attendee_id)).first()
+    
 ################################################################################
 # for messages
 ################################################################################
@@ -80,7 +84,7 @@ class ChatRepository:
         return self.session.get(Message, message_id)
 
     def get_all_messages(self, chatroom_id: int) -> List[Message]:
-        return self.session.exec(select(Message).where(Message.chatroom_id == chatroom_id)).all()
+        return self.session.exec(select(Message).where(Message.chatroom_id == chatroom_id).order_by(Message.id.asc())).all()
 
     def update_message(self, message_id: int, text: str) -> Optional[Message]:
         message = self.get_message_by_id(message_id)

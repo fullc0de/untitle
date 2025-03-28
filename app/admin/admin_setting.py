@@ -1,5 +1,5 @@
 from sqladmin import Admin, ModelView
-from app.models import Message, MsgEmbedding, User, Bot, Chatroom, Attendee
+from app.models import Message, MsgEmbedding, User, Bot, Chatroom, Attendee, UserPersona, AttendeesRelationship
 class MessageAdmin(ModelView, model=Message):
     column_list = [Message.id, Message.text]
     column_sortable_list = [Message.id, Message.text]
@@ -25,6 +25,21 @@ class ChatroomAdmin(ModelView, model=Chatroom):
     column_sortable_list = [Chatroom.id, Chatroom.property]
     column_searchable_list = [Chatroom.property]
 
+class AttendeeAdmin(ModelView, model=Attendee):
+    column_list = [Attendee.id, Attendee.chatroom_id, Attendee.target_id, Attendee.attendee_type]
+    column_sortable_list = [Attendee.id]
+    column_searchable_list = [Attendee.chatroom_id, Attendee.target_id]
+
+class UserPersonaAdmin(ModelView, model=UserPersona):
+    column_list = [UserPersona.id, UserPersona.user_id, UserPersona.attendee_id, UserPersona.chatroom_id, UserPersona.nickname, UserPersona.age, UserPersona.gender, UserPersona.description]
+    column_sortable_list = [UserPersona.id, UserPersona.user_id, UserPersona.attendee_id, UserPersona.chatroom_id, UserPersona.nickname, UserPersona.age, UserPersona.gender]
+    column_searchable_list = [UserPersona.nickname, UserPersona.user_id]
+
+class AttendeesRelationshipAdmin(ModelView, model=AttendeesRelationship):
+    column_list = [AttendeesRelationship.id, AttendeesRelationship.chatroom_id, AttendeesRelationship.relationship]
+    column_sortable_list = [AttendeesRelationship.id, AttendeesRelationship.chatroom_id]
+    column_searchable_list = [AttendeesRelationship.relationship]
+
 def setup_admin(app, engine):
     admin = Admin(app, engine)
     admin.add_view(MessageAdmin)
@@ -32,4 +47,7 @@ def setup_admin(app, engine):
     admin.add_view(UserAdmin)
     admin.add_view(BotAdmin)
     admin.add_view(ChatroomAdmin)
+    admin.add_view(AttendeeAdmin)
+    admin.add_view(UserPersonaAdmin)
+    admin.add_view(AttendeesRelationshipAdmin)
     return admin 

@@ -51,9 +51,7 @@ class ChatService(TransactionService):
     def make_turn(self, text: str, chatroom_id: int, sender_id: int, sender_type: AttendeeType) -> Message:
         def transaction(session: Session):
             msg = self.chat_repository.create_message(text, chatroom_id, sender_id, sender_type)
-            attendees = self.chat_repository.get_attendees_by_chatroom_id(chatroom_id, AttendeeType.bot)
-            bot_attendee_id = attendees[0].id
-            request_bot_msg_task.delay(chatroom_id, bot_attendee_id, 0.7)
+            request_bot_msg_task.delay(chatroom_id, 1.0)
             return msg
         return self.execute_in_transaction(transaction)
 
