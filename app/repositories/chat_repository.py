@@ -33,7 +33,7 @@ class ChatRepository:
         ).distinct()
         return self.session.exec(stmt).all()
 
-    def get_chatroom(self, chatroom_id: int) -> Chatroom:
+    def get_chatroom(self, chatroom_id: int) -> Chatroom | None:
         return self.session.exec(select(Chatroom).where(Chatroom.id == chatroom_id)).first()
 
     def delete_chatroom(self, chatroom_id: int):

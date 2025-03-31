@@ -6,7 +6,6 @@ from app.repositories.user_repository import UserRepository
 from app.services.transaction_service import TransactionService
 from app.models.chatroom import Chatroom
 from app.models.attendee import Attendee,AttendeeType
-from app.models.user import User
 from app.models.message import Message
 from app.services import enum
 from typing import List, Tuple, Optional
@@ -25,17 +24,13 @@ class ChatService(TransactionService):
         self.chat_repository = chat_repository
         self.user_repository = user_repository
 
-    def create_chatroom(self, me_id: int, peer_id: int, peer_type: enum.AttendeeType) -> Tuple[Chatroom, Attendee, Attendee]:
+    def create_chatroom(self, me_id: int, peer_ids: List[int]) -> Tuple[Chatroom]:
         def transaction(session: Session):
             chatroom = self.chat_repository.create_chatroom()
-            a1 = self.chat_repository.add_attendee_to_chatroom(chatroom.id, me_id, AttendeeType.user)
-            match peer_type:
-                case enum.AttendeeType.bot:
-                    a2 = self.chat_repository.add_attendee_to_chatroom(chatroom.id, peer_id, AttendeeType.bot)
-                case enum.AttendeeType.user:
-                    a2 = self.chat_repository.add_attendee_to_chatroom(chatroom.id, peer_id, AttendeeType.user)
-            return chatroom, a1, a2
-        
+            self.chat_repository.add_attendee_to_chatroom(chatroom.id, me_id, AttendeeType.user)
+            for peer_id in peer_ids:
+                self.chat_repository.add_attendee_to_chatroom(chatroom.id, peer_id, AttendeeType.bot)
+            return chatroom
         return self.execute_in_transaction(transaction)
     
     def get_chatrooms_by_user_id(self, user_id: int) -> List[Chatroom]:
@@ -44,6 +39,10 @@ class ChatService(TransactionService):
             raise HTTPException(status_code=404, detail="사용자를 찾을 수 없습니다.")
         return self.chat_repository.get_chatrooms_by_target_id(user_id, AttendeeType.user)
         
+    def get_chatroom_by_id(self, chatroom_id: int) -> Chatroom | None:
+        chatroom = self.chat_repository.get_chatroom(chatroom_id)
+        return chatroom
+    
     # Relationship loaders
     def load_chatroom_attendees(self, chatroom: Chatroom) -> Chatroom:
         return self.chat_repository.session.refresh(chatroom, ["attendees"])

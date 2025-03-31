@@ -111,13 +111,48 @@
         // 페이지 로딩 시 메시지 가져오기
         window.onload = async function() {
             try {
-                const response = await fetch('/api/chats?chatroom_id=8', {
+                // URL에서 chatroom_id 파라미터 가져오기
+                const urlParams = new URLSearchParams(window.location.search);
+                const chatroomId = urlParams.get('chatroom_id');
+                
+                if (!chatroomId) {
+                    appendMessage('시스템', '채팅방 ID가 없습니다.');
+                    return;
+                }
+                
+                // 채팅방 정보 가져오기
+                const chatroomResponse = await fetch(`/api/chatrooms/${chatroomId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+                
+                if (!chatroomResponse.ok) {
+                    throw new Error('채팅방 정보를 불러오는데 실패했습니다.');
+                }
+                
+                const chatroom = await chatroomResponse.json();
+                
+                // 채팅방 제목 설정
+                const title = document.querySelector('h1');
+                const participantName = chatroom.attendees.map(attendee => attendee.name).join(', ');
+                title.textContent = participantName;
+                
+                // 내 attendee ID 찾기
+                const myAttendeeId = chatroom.attendees.find(attendee => !attendee.is_bot)?.id;
+                
+                // 이전 메시지 가져오기
+                const response = await fetch(`/api/chats?chatroom_id=${chatroomId}`, {
                     headers: {
                         'Authorization': `Bearer ${localStorage.getItem('token')}`
                     }
                 });
                 const chats = await response.json();
                 chats.forEach(chat => appendMessage(chat.sender_type === 'user' ? '사용자' : '서버', chat.text));
+                
+                // 전역 변수로 필요한 정보 저장
+                window.chatroomId = chatroomId;
+                window.myAttendeeId = myAttendeeId;
             } catch (error) {
                 console.error('메시지 로딩 오류:', error);
                 appendMessage('시스템', '메시지를 불러오는 데 실패했습니다.');
@@ -145,12 +180,14 @@
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${localStorage.getItem('token')}`
                     },
-                    body: JSON.stringify({ msg: message, chatroom_id: 8, sender_id: 13 })   // fixme: 13은 attendee 아이디
+                    body: JSON.stringify({ 
+                        msg: message, 
+                        chatroom_id: window.chatroomId, 
+                        sender_id: window.myAttendeeId 
+                    })
                 });
                 const data = await response.json();
                 
-                // // 서버 응답 표시
-                //  appendMessage('서버', data.reply);
                 if (!response.ok) {
                     throw new Error('서버 응답 오류');
                 }
@@ -178,7 +215,7 @@
             resetButton.disabled = true;
 
             try {
-                const response = await fetch('/api/reset_chats?chatroom_id=8', {
+                const response = await fetch(`/api/reset_chats?chatroom_id=${window.chatroomId}`, {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${localStorage.getItem('token')}`

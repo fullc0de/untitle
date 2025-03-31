@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>채팅방 목록</title>
+    <link rel="stylesheet" href="/static/css/common.css">
+    <style>
+        .chatrooms-container {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .chatroom-list {
+            width: 100%;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: white;
+            overflow-y: auto;
+            max-height: 600px;
+        }
+
+        .chatroom-item {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+        }
+
+        .chatroom-item:last-child {
+            border-bottom: none;
+        }
+
+        .chatroom-item:hover {
+            background-color: #f5f5f5;
+        }
+
+        .chatroom-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .chatroom-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .chatroom-date {
+            text-align: right;
+        }
+
+        .empty-state {
+            padding: 30px;
+            text-align: center;
+            color: #666;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="chatrooms-container">
+        <h1>채팅방 목록</h1>
+        <div class="chatroom-list" id="chatroomList">
+            <div class="loading">채팅방 목록을 불러오는 중...</div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async function() {
+            const chatroomList = document.getElementById('chatroomList');
+            
+            // 토큰 확인
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = '/login';
+                return;
+            }
+
+            try {
+                // 채팅방 목록 가져오기
+                const response = await fetch('/api/chatrooms', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('채팅방 목록을 불러오는데 실패했습니다.');
+                }
+
+                const chatrooms = await response.json();
+                
+                // 로딩 메시지 제거
+                chatroomList.innerHTML = '';
+                
+                if (chatrooms.length === 0) {
+                    chatroomList.innerHTML = '<div class="empty-state">채팅방이 없습니다.</div>';
+                    return;
+                }
+
+                // 채팅방 목록 표시
+                chatrooms.forEach(chatroom => {
+                    const chatroomElement = document.createElement('div');
+                    chatroomElement.className = 'chatroom-item';
+                    chatroomElement.onclick = () => navigateToChatroom(chatroom.id);
+
+                    // 채팅방 참여자 이름 표시
+                    const participantName = chatroom.attendees.map(attendee => attendee.name).join(', ');
+                    
+                    // 날짜 포맷팅
+                    const date = new Date(chatroom.updated_at || chatroom.created_at);
+                    const formattedDate = `${date.getFullYear()}-${(date.getMonth()+1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`;
+                    
+                    chatroomElement.innerHTML = `
+                        <div class="chatroom-title">${participantName}</div>
+                        <div class="chatroom-info">
+                            <div class="chatroom-id">방 ID: ${chatroom.id}</div>
+                            <div class="chatroom-date">${formattedDate}</div>
+                        </div>
+                    `;
+                    
+                    chatroomList.appendChild(chatroomElement);
+                });
+                
+            } catch (error) {
+                console.error('오류:', error);
+                chatroomList.innerHTML = `<div class="empty-state">오류가 발생했습니다: ${error.message}</div>`;
+            }
+        });
+
+        function navigateToChatroom(chatroomId) {
+            // 채팅방 페이지로 이동
+            window.location.href = `/chat?chatroom_id=${chatroomId}`;
+        }
+    </script>
+</body>
+</html> 

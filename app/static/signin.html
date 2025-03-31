@@ -70,8 +70,8 @@
                 // 토큰을 로컬 스토리지에 저장
                 localStorage.setItem('token', data.token);
                 
-                // 채팅 페이지로 리다이렉트
-                window.location.href = '/main';
+                // 채팅방 목록 페이지로 리다이렉트
+                window.location.href = '/chatrooms';
             } catch (error) {
                 console.error('Error:', error);
                 errorMessage.textContent = error.message;

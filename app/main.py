@@ -98,3 +98,11 @@ async def signin_page():
 @app.get("/main")
 async def main_page():
     return FileResponse("app/static/main.html", media_type="text/html")
+
+@app.get("/chatrooms")
+async def get_chatrooms_page():
+    return FileResponse("app/static/chatrooms.html", media_type="text/html")
+
+@app.get("/chat")
+async def get_chat_page():
+    return FileResponse("app/static/chat.html", media_type="text/html")
