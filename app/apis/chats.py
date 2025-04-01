@@ -8,8 +8,7 @@ from sqlmodel import Session
 from app.database import get_session, engine
 from pydantic import BaseModel, Field, field_validator
 from app.dependencies.auth import get_current_user
-from app.models.user import User
-from app.models.chatroom import Chatroom
+from app.models import User, Chatroom, Message, UserPersona
 from app.models.attendee import AttendeeType
 from app.apis import enum as api_enum
 from typing import List, Dict, Any, Literal, Optional
@@ -138,9 +137,16 @@ def get_chats(
     current_user: User = Depends(get_current_user),
     session: Session = Depends(get_session)
 ):
-    chat_repository = ChatRepository(session)
-    messages = chat_repository.get_all_messages(chatroom_id)
-    return messages
+    chat_service = ChatService(session, ChatRepository(session), UserRepository(session))
+    user_service = UserService(session, UserRepository(session))
+    chatroom = chat_service.get_chatroom_by_id(chatroom_id)
+    messages = chat_service.get_all_messages(chatroom_id)
+    user_persona = user_service.user_persona_by_user_id(current_user.id, chatroom_id)
+
+    chatsResp = []
+    for message in messages:
+        chatsResp.append(get_chat_resp(chatroom, message, user_persona, session))
+    return chatsResp
 
 
 @router.post("/api/reset_chats")
@@ -181,3 +187,42 @@ def get_chatroom_resp(chatroom: Chatroom, session: Session) -> ChatroomResp:
         created_at=chatroom.created_at,
         updated_at=chatroom.updated_at
     )
+
+
+def get_chat_resp(chatroom: Chatroom, message: Message, user_persona: UserPersona, session: Session) -> ChatResp:
+    resp = ChatResp(
+        id=message.id,
+        text=message.text,
+        chatroom_id=chatroom.id,
+        attendee_type=message.attendee_type,
+        created_at=message.created_at
+    )
+
+    def create_formatted_msg(name: str, message: str, attendee_id: int, is_user: bool = False) -> dict:
+        return {
+            "name": name,
+            "message": message,
+            "attendee_id": attendee_id,
+            "is_user": is_user,
+            "is_narrator": name == "narrator"
+        }
+
+    if message.attendee_type == AttendeeType.bot:
+        pass
+        # msg_json = json.loads(message.text)
+        # formatted_messages = [
+        #     create_formatted_msg(
+        #         msg.get("name", "Unknown"),
+        #         msg.get("message", ""),
+        #         msg.get("attendee_id", None),
+        #         msg.get("name", "Unknown") == user_persona.nickname
+        #     )
+        #     for msg in msg_json.get("messages", [])
+        # ]
+    else:
+        formatted_messages = [create_formatted_msg(user_persona.nickname, message.text, user_persona.attendee_id)]
+        resp.text = json.dumps({"messages": formatted_messages})
+    
+    logger.info(f"formatted_messages: {resp.text}")
+    
+    return resp

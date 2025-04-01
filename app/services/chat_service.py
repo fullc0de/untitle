@@ -64,3 +64,6 @@ class ChatService(TransactionService):
         def transaction(session: Session):
             self.chat_repository.delete_all_messages(chatroom_id)
         return self.execute_in_transaction(transaction)
+    
+    def get_all_messages(self, chatroom_id: int) -> List[Message]:
+        return self.chat_repository.get_all_messages(chatroom_id)

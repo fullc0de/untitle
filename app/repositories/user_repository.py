@@ -33,3 +33,7 @@ class UserRepository:
     def user_persona_by_attendee_id(self, attendee_id: int) -> UserPersona | None:
         stmt = select(UserPersona).where(UserPersona.attendee_id == attendee_id)
         return self.session.exec(stmt).first()
+    
+    def user_persona_by_user_id(self, user_id: int, chatroom_id: int) -> UserPersona | None:
+        stmt = select(UserPersona).where(UserPersona.user_id == user_id, UserPersona.chatroom_id == chatroom_id)
+        return self.session.exec(stmt).first()

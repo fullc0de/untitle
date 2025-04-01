@@ -32,7 +32,7 @@ def request_bot_msg_task(chatroom_id: int, temperature=0.7) -> MsgInfo:
                 user_repository = UserRepository(session)
                 chat_repository = ChatRepository(session)
 
-                recent_messages = chat_repository.get_latest_messages(chatroom_id, 20)
+                recent_messages = chat_repository.get_latest_messages(chatroom_id, 10)
                 logger.info(f"recent_messages: {recent_messages.reverse()}")
 
                 user_attendee = chat_repository.get_attendees_by_chatroom_id(chatroom_id, AttendeeType.user)[0]
@@ -44,7 +44,7 @@ def request_bot_msg_task(chatroom_id: int, temperature=0.7) -> MsgInfo:
                     bot_persona = user_repository.get_bot_by_attendee_id(ba.id)
                     logger.info(f"bot_persona: {bot_persona.name}")
                     logger.info(f"bot_persona.property: {bot_persona.property}")
-                    persona_list.append(bot_persona.name + "\n" + bot_persona.property["persona"])
+                    persona_list.append(bot_persona.name + "(attendee_id: " + str(ba.id) + ")" + "\n" + bot_persona.property["persona"])
 
                 prompt_context = PromptContext()
                 prompt_context.prompt_template = build_prompt(

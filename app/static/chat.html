@@ -27,6 +27,15 @@
 
         #chatBox p {
             margin: 0 0 5px 0;
+            padding: 5px;
+        }
+
+        #chatBox p:nth-child(even) {
+            background-color: #f5f5f5;
+        }
+
+        #chatBox p:nth-child(odd) {
+            background-color: #ffffff;
         }
 
         .input-container {
@@ -103,9 +112,27 @@
             appendMessage('시스템', '서버와의 연결이 끊어졌습니다.');
         });
 
+        function parseAndDisplayMessages(text) {
+            try {
+                const parsedData = JSON.parse(text);
+                if (parsedData.messages && Array.isArray(parsedData.messages)) {
+                    parsedData.messages.forEach(msg => {
+                        appendMessage(msg.name, msg.message, msg.is_narrator);
+                    });
+                    return true;
+                }
+                return false;
+            } catch (error) {
+                console.error('메시지 파싱 오류:', error);
+                return false;
+            }
+        }
+
         socket.on('message', (data) => {
             console.log('메시지 수신:', data);
-            appendMessage('서버', data.data);
+            if (!parseAndDisplayMessages(data.data)) {
+                appendMessage('시스템', '메시지 처리 중 오류가 발생했습니다.');
+            }
         });
 
         // 페이지 로딩 시 메시지 가져오기
@@ -140,7 +167,8 @@
                 
                 // 내 attendee ID 찾기
                 const myAttendeeId = chatroom.attendees.find(attendee => !attendee.is_bot)?.id;
-                
+                const myAttendeeName = chatroom.attendees.find(attendee => !attendee.is_bot)?.name;
+
                 // 이전 메시지 가져오기
                 const response = await fetch(`/api/chats?chatroom_id=${chatroomId}`, {
                     headers: {
@@ -148,11 +176,16 @@
                     }
                 });
                 const chats = await response.json();
-                chats.forEach(chat => appendMessage(chat.sender_type === 'user' ? '사용자' : '서버', chat.text));
+                chats.forEach(chat => {
+                    if (!parseAndDisplayMessages(chat.text)) {
+                        appendMessage('서버', '메시지 JSON 파싱 오류');
+                    }
+                });
                 
                 // 전역 변수로 필요한 정보 저장
                 window.chatroomId = chatroomId;
                 window.myAttendeeId = myAttendeeId;
+                window.myAttendeeName = myAttendeeName;
             } catch (error) {
                 console.error('메시지 로딩 오류:', error);
                 appendMessage('시스템', '메시지를 불러오는 데 실패했습니다.');
@@ -171,7 +204,7 @@
             if (!message) return;
 
             // 사용자 메시지 표시
-            appendMessage('사용자', message);
+            appendMessage(window.myAttendeeName, message);
 
             try {
                 const response = await fetch('/api/chats', {
@@ -200,9 +233,12 @@
             messageInput.value = '';
         }
 
-        function appendMessage(sender, message) {
+        function appendMessage(sender, message, isNarrator = false) {
             const messageElement = document.createElement('p');
             messageElement.textContent = `${sender}: ${message}`;
+            if (isNarrator) {
+                messageElement.style.backgroundColor = 'pink';
+            }
             chatBox.appendChild(messageElement);
             
             // 스크롤을 항상 아래로 유지

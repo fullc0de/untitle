@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 import os
 from dotenv import load_dotenv
-from typing import Dict, List, Any, Tuple
+from typing import Dict, List, Any, Tuple, Optional
 import logging
 from anthropic import AsyncAnthropic
 from openai import AsyncOpenAI
@@ -38,6 +38,9 @@ class AIRequest(ABC):
 
 class PersonaResponse(BaseModel):
     name: str
+    attendee_id: Optional[int] = None
+    is_user: bool
+    is_narrator: bool
     message: str
 
 class AIResponse(BaseModel):
@@ -117,20 +120,22 @@ class GeminiRequest(AIRequest):
             logger.info(f"Gemini API 요청: formatted_messages: {formatted_messages}")
             client = genai.Client(api_key=self.api_key)
             assistant_message = await client.aio.models.generate_content(
-                model= "gemini-2.0-flash-001",
+                #model= "gemini-2.0-flash-001",
+                model= "gemini-2.5-pro-exp-03-25",
                 contents=formatted_messages,
                 config=types.GenerateContentConfig(
                     system_instruction=system_prompt,
                     response_mime_type= "application/json",
                     response_schema= AIResponse,
-                    max_output_tokens=4096,
+                    max_output_tokens=8192,
                     temperature=temperature
                 )
             )
             logger.info(f"Gemini API 원본 응답: {assistant_message}")
 
             token_count = await client.aio.models.count_tokens(
-                model="gemini-2.0-flash-001",
+                #model="gemini-2.0-flash-001",
+                model="gemini-2.5-pro-exp-03-25",
                 contents=[
                     types.Content(
                         role="system",

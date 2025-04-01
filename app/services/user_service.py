@@ -34,3 +34,6 @@ class UserService(TransactionService):
 
     def user_persona_by_attendee_id(self, attendee_id: int) -> UserPersona:
         return self.user_repository.user_persona_by_attendee_id(attendee_id)
+
+    def user_persona_by_user_id(self, user_id: int, chatroom_id: int) -> UserPersona:
+        return self.user_repository.user_persona_by_user_id(user_id, chatroom_id)
