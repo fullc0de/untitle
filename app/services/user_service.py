@@ -37,3 +37,6 @@ class UserService(TransactionService):
 
     def user_persona_by_user_id(self, user_id: int, chatroom_id: int) -> UserPersona:
         return self.user_repository.user_persona_by_user_id(user_id, chatroom_id)
+    
+    def get_bots(self) -> List[Bot]:
+        return self.user_repository.get_bots()

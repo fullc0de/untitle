@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>채팅방 목록</title>
+    <title>채팅방</title>
     <link rel="stylesheet" href="/static/css/common.css">
     <style>
         .chatrooms-container {
@@ -11,21 +11,28 @@
             max-width: 800px;
             margin: 0 auto;
             padding: 20px;
+            position: relative;
+            min-height: 80vh;
         }
 
         .chatroom-list {
             width: 100%;
-            border: 1px solid #ccc;
-            border-radius: 5px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
             background-color: white;
             overflow-y: auto;
             max-height: 600px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         .chatroom-item {
-            padding: 15px;
+            padding: 20px;
             border-bottom: 1px solid #eee;
             cursor: pointer;
+            transition: background-color 0.2s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
         }
 
         .chatroom-item:last-child {
@@ -33,20 +40,21 @@
         }
 
         .chatroom-item:hover {
-            background-color: #f5f5f5;
+            background-color: #f8f9fa;
         }
 
         .chatroom-title {
-            font-size: 18px;
-            font-weight: bold;
-            margin-bottom: 5px;
+            font-size: 16px;
+            font-weight: 500;
+            color: #333;
+            flex: 1;
+            margin-right: 20px;
         }
 
         .chatroom-info {
-            display: flex;
-            justify-content: space-between;
             font-size: 14px;
             color: #666;
+            white-space: nowrap;
         }
 
         .chatroom-date {
@@ -54,7 +62,7 @@
         }
 
         .empty-state {
-            padding: 30px;
+            padding: 40px;
             text-align: center;
             color: #666;
         }
@@ -62,15 +70,48 @@
         .loading {
             text-align: center;
             padding: 20px;
+            color: #666;
+        }
+
+        .create-button {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            border-radius: 30px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease, background-color 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .create-button:hover {
+            transform: translateY(-2px);
+            background-color: #45a049;
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: 500;
+            margin-bottom: 20px;
+            color: #333;
         }
     </style>
 </head>
 <body>
     <div class="chatrooms-container">
-        <h1>채팅방 목록</h1>
+        <h1 class="page-title">채팅방</h1>
         <div class="chatroom-list" id="chatroomList">
             <div class="loading">채팅방 목록을 불러오는 중...</div>
         </div>
+        <button class="create-button" onclick="createNewChatroom()">+</button>
     </div>
 
     <script>
@@ -121,10 +162,7 @@
                     
                     chatroomElement.innerHTML = `
                         <div class="chatroom-title">${participantName}</div>
-                        <div class="chatroom-info">
-                            <div class="chatroom-id">방 ID: ${chatroom.id}</div>
-                            <div class="chatroom-date">${formattedDate}</div>
-                        </div>
+                        <div class="chatroom-date">${formattedDate}</div>
                     `;
                     
                     chatroomList.appendChild(chatroomElement);
@@ -137,8 +175,11 @@
         });
 
         function navigateToChatroom(chatroomId) {
-            // 채팅방 페이지로 이동
             window.location.href = `/chat?chatroom_id=${chatroomId}`;
+        }
+
+        function createNewChatroom() {
+            window.location.href = '/create-chatroom';
         }
     </script>
 </body>

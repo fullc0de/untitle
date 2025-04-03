@@ -13,6 +13,7 @@ from fastapi.staticfiles import StaticFiles
 from app.apis.chats import router as chats_router
 from app.apis.auth import router as auth_router
 from app.apis.users import router as users_router
+from app.apis.bots import router as bots_router
 from app.utils.websocket import socket_app, send_message_to_client
 from app.admin.admin_setting import setup_admin
 import redis.asyncio as redis
@@ -72,6 +73,7 @@ app.mount("/static", StaticFiles(directory="app/static"), name="static")
 app.include_router(chats_router)
 app.include_router(auth_router)
 app.include_router(users_router)
+app.include_router(bots_router)
 
 ###
 # 아래 부분은 프로젝트 테스트 코드임
@@ -102,6 +104,10 @@ async def main_page():
 @app.get("/chatrooms")
 async def get_chatrooms_page():
     return FileResponse("app/static/chatrooms.html", media_type="text/html")
+
+@app.get("/create-chatroom")
+async def get_create_chatroom_page():
+    return FileResponse("app/static/create-chatroom.html", media_type="text/html")
 
 @app.get("/chat")
 async def get_chat_page():
