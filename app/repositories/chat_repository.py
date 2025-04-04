@@ -5,7 +5,7 @@ from app.models.bot import Bot
 from app.models.message import Message
 from app.models.msg_embedding import MsgEmbedding
 from app.models.attendee import Attendee, AttendeeType
-from app.models.user_persona import UserPersona
+from app.models.user_persona import UserPersona, Gender
 from typing import List, Optional, Dict
 from sqlalchemy import ARRAY
 import numpy as np
@@ -70,6 +70,12 @@ class ChatRepository:
     def get_user_persona_by_attendee_id(self, attendee_id: int) -> UserPersona:
         return self.session.exec(select(UserPersona).where(UserPersona.attendee_id == attendee_id)).first()
     
+    def create_user_persona(self, user_id: int, chatroom_id: int, attendee_id: int, nickname: str, user_persona_desc: str, age: int, gender: str) -> UserPersona:
+        user_persona = UserPersona(user_id=user_id, chatroom_id=chatroom_id, attendee_id=attendee_id, nickname=nickname, description=user_persona_desc, age=age, gender=Gender(gender))
+        self.session.add(user_persona)
+        self.session.flush()
+        return user_persona
+
 ################################################################################
 # for messages
 ################################################################################

@@ -38,6 +38,10 @@ class ChatroomResp(BaseModel):
 
 class CreateChatroomParam(BaseModel):
     bot_ids: List[int]
+    nickname: str
+    user_persona_desc: str
+    age: int
+    gender: str
 
 @router.post("/api/chatrooms", response_model=ChatroomResp)
 def create_chatroom(
@@ -47,7 +51,14 @@ def create_chatroom(
 ):
     try:
         chat_service = ChatService(session, ChatRepository(session), UserRepository(session))
-        chatroom = chat_service.create_chatroom(current_user.id, create_chatroom_param.bot_ids)
+        chatroom = chat_service.create_chatroom(
+            current_user.id, 
+            create_chatroom_param.nickname,
+            create_chatroom_param.user_persona_desc,
+            create_chatroom_param.age,
+            create_chatroom_param.gender,
+            create_chatroom_param.bot_ids
+        )
 
         return get_chatroom_resp(chatroom, session)
             

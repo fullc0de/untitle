@@ -37,6 +37,7 @@ def request_bot_msg_task(chatroom_id: int, temperature=0.7) -> MsgInfo:
 
                 user_attendee = chat_repository.get_attendees_by_chatroom_id(chatroom_id, AttendeeType.user)[0]
                 user_persona = chat_repository.get_user_persona_by_attendee_id(user_attendee.id)
+                user_name_with_attendee_id = user_persona.nickname + "(attendee_id: " + str(user_attendee.id) + ")"
 
                 persona_list = []
                 bot_attendees = chat_repository.get_attendees_by_chatroom_id(chatroom_id, AttendeeType.bot)
@@ -49,7 +50,7 @@ def request_bot_msg_task(chatroom_id: int, temperature=0.7) -> MsgInfo:
                 prompt_context = PromptContext()
                 prompt_context.prompt_template = build_prompt(
                     template=prompts.prompt_template,
-                    user_name=user_persona.nickname,
+                    user_name=user_name_with_attendee_id,
                     user_description=user_persona.description,
                     user_age=user_persona.age,
                     user_gender="남성" if user_persona.gender == "male" else "여성" if user_persona.gender == "female" else "non-binary",

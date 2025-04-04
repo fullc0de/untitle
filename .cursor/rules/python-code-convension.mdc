@@ -1,0 +1,15 @@
+---
+description: 
+globs: *.py
+alwaysApply: false
+---
+
+# Your rule content
+
+함수 정의에서 파라메터가 1개 이상 일 경우는 한 줄에 파라메터 하나씩 배치한다. 
+예시)
+def func_name(
+    foo: str,
+    bar: int
+):
+함수 호출 시에도 파라메터가 1개 이상 일 경우 한 줄에 파라메터 하나씩 배치한다.

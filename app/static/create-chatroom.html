@@ -82,6 +82,35 @@
             box-sizing: border-box; /* 패딩을 너비에 포함 */
         }
 
+        .input-row {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .input-group {
+            flex: 1;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            font-size: 14px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            box-sizing: border-box;
+        }
+
+        .form-select {
+            width: 100%;
+            padding: 12px;
+            font-size: 14px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            box-sizing: border-box;
+            background-color: white;
+        }
+
         .create-button {
             display: block;
             width: 100%;
@@ -126,6 +155,32 @@
         </div>
 
         <div class="form-group">
+            <label class="form-label">사용자 정보</label>
+            <div class="input-row">
+                <div class="input-group">
+                    <label class="form-label">이름</label>
+                    <input type="text" class="form-input" id="nicknameInput" placeholder="이름을 입력하세요">
+                    <div class="error-message" id="nicknameError">이름을 입력해주세요.</div>
+                </div>
+                <div class="input-group">
+                    <label class="form-label">나이</label>
+                    <input type="number" class="form-input" id="ageInput" min="1" max="120" placeholder="나이를 입력하세요">
+                    <div class="error-message" id="ageError">나이를 입력해주세요.</div>
+                </div>
+                <div class="input-group">
+                    <label class="form-label">성별</label>
+                    <select class="form-select" id="genderInput">
+                        <option value="">성별을 선택하세요</option>
+                        <option value="male">남성</option>
+                        <option value="female">여성</option>
+                        <option value="non-binary">논바이너리</option>
+                    </select>
+                    <div class="error-message" id="genderError">성별을 선택해주세요.</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group">
             <label class="form-label">페르소나 설정</label>
             <textarea class="persona-input" id="personaInput" 
                       placeholder="예) 홍길동은 열정적인 개발자로서 새로운 기술에 대한 호기심이 많습니다."></textarea>
@@ -145,9 +200,15 @@
 
             const participantList = document.getElementById('participantList');
             const personaInput = document.getElementById('personaInput');
+            const nicknameInput = document.getElementById('nicknameInput');
+            const ageInput = document.getElementById('ageInput');
+            const genderInput = document.getElementById('genderInput');
             const createButton = document.getElementById('createButton');
             const participantError = document.getElementById('participantError');
             const personaError = document.getElementById('personaError');
+            const nicknameError = document.getElementById('nicknameError');
+            const ageError = document.getElementById('ageError');
+            const genderError = document.getElementById('genderError');
 
             // 사용자 목록 가져오기
             try {
@@ -188,6 +249,9 @@
                 // 에러 메시지 초기화
                 participantError.style.display = 'none';
                 personaError.style.display = 'none';
+                nicknameError.style.display = 'none';
+                ageError.style.display = 'none';
+                genderError.style.display = 'none';
 
                 // 선택된 참여자 가져오기
                 const selectedParticipants = Array.from(document.querySelectorAll('.participant-checkbox:checked'))
@@ -195,6 +259,9 @@
 
                 // 페르소나 텍스트 가져오기
                 const persona = personaInput.value.trim();
+                const nickname = nicknameInput.value.trim();
+                const age = ageInput.value;
+                const gender = genderInput.value;
 
                 // 유효성 검사
                 let isValid = true;
@@ -206,6 +273,21 @@
 
                 if (!persona) {
                     personaError.style.display = 'block';
+                    isValid = false;
+                }
+
+                if (!nickname) {
+                    nicknameError.style.display = 'block';
+                    isValid = false;
+                }
+
+                if (!age) {
+                    ageError.style.display = 'block';
+                    isValid = false;
+                }
+
+                if (!gender) {
+                    genderError.style.display = 'block';
                     isValid = false;
                 }
 
@@ -221,8 +303,11 @@
                             'Content-Type': 'application/json'
                         },
                         body: JSON.stringify({
-                            participants: selectedParticipants,
-                            persona: persona
+                            bot_ids: selectedParticipants,
+                            nickname: nickname,
+                            user_persona_desc: persona,
+                            age: parseInt(age),
+                            gender: gender
                         })
                     });
 

@@ -24,10 +24,11 @@ class ChatService(TransactionService):
         self.chat_repository = chat_repository
         self.user_repository = user_repository
 
-    def create_chatroom(self, me_id: int, peer_ids: List[int]) -> Tuple[Chatroom]:
+    def create_chatroom(self, me_id: int, nickname: str, user_persona_desc: str, age: int, gender: str, peer_ids: List[int]) -> Tuple[Chatroom]:
         def transaction(session: Session):
             chatroom = self.chat_repository.create_chatroom()
-            self.chat_repository.add_attendee_to_chatroom(chatroom.id, me_id, AttendeeType.user)
+            me_attendee = self.chat_repository.add_attendee_to_chatroom(chatroom.id, me_id, AttendeeType.user)
+            self.chat_repository.create_user_persona(me_id, chatroom.id, me_attendee.id, nickname, user_persona_desc, age, gender)
             for peer_id in peer_ids:
                 self.chat_repository.add_attendee_to_chatroom(chatroom.id, peer_id, AttendeeType.bot)
             return chatroom
