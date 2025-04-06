@@ -31,11 +31,13 @@ class AuthService(TransactionService):
                 
                 # JWT 토큰 생성
                 token = create_jwt_token(new_user.id, new_user.nickname)
-                
+                logger.info(f"생성된 토큰: {token}")
+
                 # 토큰 저장
                 new_user = self.auth_repository.update_user_token(new_user.id, token)
-
+                logger.info(f"토큰 저장 결과: {new_user}")
                 logger.info(f"새로운 사용자가 생성되었습니다: {username}")
+                new_user.token = token
                 return new_user
             return self.execute_in_transaction(transaction)
         
