@@ -1,5 +1,7 @@
 from sqladmin import Admin, ModelView
 from app.models import Message, MsgEmbedding, User, Bot, Chatroom, Attendee, UserPersona, AttendeesRelationship
+import json
+
 class MessageAdmin(ModelView, model=Message):
     column_list = [Message.id, Message.text]
     column_sortable_list = [Message.id, Message.text]
@@ -19,6 +21,7 @@ class BotAdmin(ModelView, model=Bot):
     column_list = [Bot.id, Bot.name, Bot.ai_model, Bot.property]
     column_sortable_list = [Bot.id, Bot.name]
     column_searchable_list = [Bot.name, Bot.ai_model]
+    form_columns = [Bot.name, Bot.ai_model, Bot.property]
 
 class ChatroomAdmin(ModelView, model=Chatroom):
     column_list = [Chatroom.id, Chatroom.property, Chatroom.created_at, Chatroom.updated_at]

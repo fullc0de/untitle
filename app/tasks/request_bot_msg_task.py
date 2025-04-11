@@ -37,15 +37,17 @@ def request_bot_msg_task(chatroom_id: int, temperature=0.7) -> MsgInfo:
 
                 user_attendee = chat_repository.get_attendees_by_chatroom_id(chatroom_id, AttendeeType.user)[0]
                 user_persona = chat_repository.get_user_persona_by_attendee_id(user_attendee.id)
-                user_name_with_attendee_id = user_persona.nickname + "(attendee_id: " + str(user_attendee.id) + ")"
-
+                #user_name_with_attendee_id = user_persona.nickname + "(attendee_id: " + str(user_attendee.id) + ")"
+                user_name_with_attendee_id = user_persona.nickname
+                
                 persona_list = []
                 bot_attendees = chat_repository.get_attendees_by_chatroom_id(chatroom_id, AttendeeType.bot)
                 for ba in bot_attendees:
                     bot_persona = user_repository.get_bot_by_attendee_id(ba.id)
                     logger.info(f"bot_persona: {bot_persona.name}")
                     logger.info(f"bot_persona.property: {bot_persona.property}")
-                    persona_list.append(bot_persona.name + "(attendee_id: " + str(ba.id) + ")" + "\n" + bot_persona.property["persona"])
+                    #persona_list.append(bot_persona.name + "(attendee_id: " + str(ba.id) + ")" + "\n" + bot_persona.property["persona"])
+                    persona_list.append(bot_persona.name + "\n" + bot_persona.property["persona"])
 
                 prompt_context = PromptContext()
                 prompt_context.prompt_template = build_prompt(

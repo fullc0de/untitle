@@ -234,6 +234,7 @@ def get_chat_resp(chatroom: Chatroom, message: Message, user_persona: UserPerson
         formatted_messages = [create_formatted_msg(user_persona.nickname, message.text, user_persona.attendee_id)]
         resp.text = json.dumps({"messages": formatted_messages})
     
+    logger.info(f"raw message: {message.text}")
     logger.info(f"formatted_messages: {resp.text}")
     
     return resp

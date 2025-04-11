@@ -36,15 +36,16 @@ class AIRequest(ABC):
     def agent_role(self, type: AttendeeType) -> str:
         pass
 
-class PersonaResponse(BaseModel):
+class CharacterResponse(BaseModel):
     name: str
-    attendee_id: Optional[int] = None
+    #attendee_id: Optional[int] = None
     is_user: bool
-    is_narrator: bool
+    is_storyteller: bool
     message: str
 
 class AIResponse(BaseModel):
-    messages: List[PersonaResponse]
+    messages: List[CharacterResponse]
+    summary: str
 
 class OpenAIRequest(AIRequest):
     def __init__(self, model: str):
@@ -127,7 +128,7 @@ class GeminiRequest(AIRequest):
                     system_instruction=system_prompt,
                     response_mime_type= "application/json",
                     response_schema= AIResponse,
-                    max_output_tokens=8192,
+                    max_output_tokens=8192 * 2,
                     temperature=temperature
                 )
             )
