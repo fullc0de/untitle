@@ -39,7 +39,7 @@ class AIRequest(ABC):
 class CharacterResponse(BaseModel):
     name: str
     #attendee_id: Optional[int] = None
-    is_user: bool
+    is_main_character: bool
     is_storyteller: bool
     message: str
 
