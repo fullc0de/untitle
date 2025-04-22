@@ -75,13 +75,14 @@ app.include_router(auth_router)
 app.include_router(users_router)
 app.include_router(bots_router)
 
+# 루트 엔드포인트 추가
+@app.get("/")
+async def root():
+    return FileResponse("app/static/index.html")
+
 ###
 # 아래 부분은 프로젝트 테스트 코드임
 ###
-
-@app.get("/")
-async def read_root():
-    return FileResponse("app/static/index.html", media_type="text/html")
 
 
 @app.get("/chat-test")

@@ -110,3 +110,4 @@ venv.bak/
 data/
 redis_data/
 
+node_modules/
