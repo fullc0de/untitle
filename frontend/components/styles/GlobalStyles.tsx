@@ -65,9 +65,13 @@ export const FormGroup = styled.div`
   }
 `;
 
-export const ErrorMessage = styled.div`
+interface ErrorMessageProps {
+  $show?: boolean;
+}
+
+export const ErrorMessage = styled.div<ErrorMessageProps>`
   color: #ff0000;
   text-align: center;
   margin-top: 1rem;
-  display: ${props => props.show ? 'block' : 'none'};
+  display: ${props => props.$show ? 'block' : 'none'};
 `; 

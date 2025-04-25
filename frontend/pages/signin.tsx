@@ -1,21 +1,21 @@
 import React from 'react';
 import type { NextPage } from 'next';
 import Head from 'next/head';
-import App from '../components/App';
+import LoginForm from '../components/LoginForm';
 import { GlobalStyle } from '../components/styles/GlobalStyles';
 
-const Home: NextPage = () => {
+const SignIn: NextPage = () => {
   return (
     <>
       <Head>
-        <title>미소녀들의 대화</title>
-        <meta name="description" content="Next.js 채팅 서비스" />
+        <title>로그인 | 미소녀들의 대화</title>
+        <meta name="description" content="로그인 페이지" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <GlobalStyle />
-      <App />
+      <LoginForm />
     </>
   );
 };
 
-export default Home; 
+export default SignIn; 

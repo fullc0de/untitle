@@ -1,6 +1,20 @@
 import React from 'react';
 
-const RoundedButton = ({ children, onClick, fontSize = '18px', padding = '15px 25px', variant = 'primary' }) => {
+interface RoundedButtonProps {
+  children: React.ReactNode;
+  onClick?: () => void;
+  fontSize?: string;
+  padding?: string;
+  variant?: 'success' | 'primary';
+}
+
+const RoundedButton: React.FC<RoundedButtonProps> = ({ 
+  children, 
+  onClick, 
+  fontSize = '18px', 
+  padding = '15px 25px', 
+  variant = 'primary' 
+}) => {
   const getButtonStyle = () => {
     switch (variant) {
       case 'success':
@@ -37,8 +51,8 @@ const RoundedButton = ({ children, onClick, fontSize = '18px', padding = '15px 2
         cursor: 'pointer',
         transition: 'background-color 0.3s ease'
       }}
-      onMouseOver={(e) => e.target.style.backgroundColor = style.hoverColor}
-      onMouseOut={(e) => e.target.style.backgroundColor = style.backgroundColor}
+      onMouseOver={(e) => e.currentTarget.style.backgroundColor = style.hoverColor}
+      onMouseOut={(e) => e.currentTarget.style.backgroundColor = style.backgroundColor}
     >
       {children}
     </button>

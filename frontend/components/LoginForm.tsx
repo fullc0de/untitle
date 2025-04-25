@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Container, Title, Button, FormGroup, ErrorMessage } from './styles/GlobalStyles';
 
-const LoginForm = () => {
-  const [error, setError] = useState(false);
+const LoginForm: React.FC = () => {
+  const [error, setError] = useState<boolean>(false);
 
   return (
     <Container>
@@ -16,7 +16,7 @@ const LoginForm = () => {
         <input type="password" id="password" />
       </FormGroup>
       <Button>로그인</Button>
-      <ErrorMessage show={error}>로그인에 실패했습니다.</ErrorMessage>
+      <ErrorMessage $show={error}>로그인에 실패했습니다.</ErrorMessage>
     </Container>
   );
 };

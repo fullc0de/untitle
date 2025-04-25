@@ -2,6 +2,7 @@ import React from 'react';
 import RoundedButton from './RoundedButton';
 import styled from 'styled-components';
 import { BaseContainer, Container, Title } from './styles/GlobalStyles';
+import { useRouter } from 'next/router';
 
 const ButtonContainer = styled.div`
   display: flex;
@@ -16,16 +17,18 @@ const ButtonContainer = styled.div`
   }
 `;
 
-const App = () => {
+const App: React.FC = () => {
+  const router = useRouter();
+
   return (
     <BaseContainer>
       <Container>
       <Title>미소녀들의 대화</Title>
       <ButtonContainer>
-        <RoundedButton variant="success" onClick={() => window.location.href = '/signup'}>
+        <RoundedButton variant="success" onClick={() => router.push('/signup')}>
           가입하기
         </RoundedButton>
-        <RoundedButton variant="primary" onClick={() => window.location.href = '/signin'}>
+        <RoundedButton variant="primary" onClick={() => router.push('/signin')}>
           로그인하기
         </RoundedButton>
       </ButtonContainer>
