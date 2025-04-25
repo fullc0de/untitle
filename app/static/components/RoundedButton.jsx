@@ -1,6 +1,6 @@
 import React from 'react';
 
-const RoundedButton = ({ children, onClick, variant = 'primary' }) => {
+const RoundedButton = ({ children, onClick, fontSize = '18px', padding = '15px 25px', variant = 'primary' }) => {
   const getButtonStyle = () => {
     switch (variant) {
       case 'success':
@@ -31,7 +31,8 @@ const RoundedButton = ({ children, onClick, variant = 'primary' }) => {
         backgroundColor: style.backgroundColor,
         color: 'white',
         border: 'none',
-        padding: '10px 20px',
+        padding: padding,
+        fontSize: fontSize,
         borderRadius: '5px',
         cursor: 'pointer',
         transition: 'background-color 0.3s ease'

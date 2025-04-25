@@ -16,6 +16,16 @@ services:
     depends_on:
       - db
 
+  frontend-dev:
+    build: .
+    command: npm start
+    volumes:
+      - .:/app
+    ports:
+      - "3000:3000"
+    depends_on:
+      - web
+
   worker:
     build: .
     command: celery -A app.celery_app worker --loglevel=info

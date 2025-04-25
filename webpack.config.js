@@ -23,5 +23,20 @@ module.exports = {
   },
   resolve: {
     extensions: ['.js', '.jsx']
+  },
+  devServer: {
+    host: '0.0.0.0',
+    port: 3000,
+    hot: true,
+    watchFiles: ['app/static/components/**/*.jsx'],
+    devMiddleware: {
+      publicPath: '/static/dist/'
+    },
+    static: {
+      directory: path.join(__dirname, 'app/static')
+    },
+    headers: {
+      'Access-Control-Allow-Origin': '*'
+    }
   }
 }; 
