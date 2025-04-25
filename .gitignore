@@ -111,3 +111,6 @@ data/
 redis_data/
 
 node_modules/
+
+# Next.js
+.next/
