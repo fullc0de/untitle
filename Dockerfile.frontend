@@ -1,0 +1,20 @@
+FROM node:20-alpine
+
+# 작업 디렉토리 설정
+WORKDIR /app
+
+# 소스 코드 복사
+COPY frontend/ .
+
+# 의존성 설치
+RUN npm install
+
+# 환경 설정 (프로덕션 대신 개발 환경으로 설정)
+ENV NODE_ENV development
+ENV PORT 3000
+
+# 포트 노출
+EXPOSE 3000
+
+# 개발 서버 실행 (hot reload 지원)
+CMD ["npm", "run", "dev"]

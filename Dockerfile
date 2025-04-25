@@ -2,17 +2,10 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-# Install system dependencies including Node.js
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
     postgresql-client \
-    curl \
-    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
-    && apt-get install -y nodejs \
     && rm -rf /var/lib/apt/lists/*
-
-# Copy package.json and install Node dependencies
-COPY package*.json ./
-RUN npm install
 
 # Copy requirements file and install Python dependencies
 COPY requirements.txt .

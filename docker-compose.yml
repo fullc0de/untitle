@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  web:
+  api:
     build: .
     volumes:
       - .:/app
@@ -16,15 +16,20 @@ services:
     depends_on:
       - db
 
-  frontend-dev:
-    build: .
-    command: npm start
-    volumes:
-      - .:/app
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
     ports:
       - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    environment:
+      - NODE_ENV=development
     depends_on:
-      - web
+      - api
 
   worker:
     build: .
