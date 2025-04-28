@@ -1,4 +1,5 @@
-from fastapi import Depends, HTTPException, Header
+from fastapi import Depends, HTTPException, Security
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from typing import Optional
 from app.utils.jwt_utils import verify_jwt_token
 from app.repositories.auth_repository import AuthRepository
@@ -9,19 +10,15 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+security = HTTPBearer()
+
 async def get_current_user(
-    authorization: Optional[str] = Header(None),
+    credentials: HTTPAuthorizationCredentials = Security(security),
     session: Session = Depends(get_session)
 ) -> User:
     """현재 인증된 사용자를 반환하는 의존성 함수입니다."""
-    if not authorization:
-        raise HTTPException(
-            status_code=401, 
-            detail="인증 토큰이 필요합니다."
-        )
-        
     try:
-        token = authorization.replace("Bearer ", "")
+        token = credentials.credentials
         result = verify_jwt_token(token)
         
         if not result["success"]:

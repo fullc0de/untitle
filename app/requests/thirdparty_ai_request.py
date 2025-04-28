@@ -8,9 +8,7 @@ from openai import AsyncOpenAI
 from google import genai
 from google.genai import types
 from pydantic import BaseModel
-from app.repositories.chat_repository import ChatRepository
-from app.models import Message
-from app.models.attendee import AttendeeType
+from app.models import Chat
 import app.prompts as prompts
 load_dotenv()
 
@@ -29,11 +27,11 @@ class PromptContext:
 
 class AIRequest(ABC):
     @abstractmethod
-    async def chat(self, system_prompt: str, messages: List[Message], temperature: float) -> Dict[str, Any]:
+    async def chat(self, system_prompt: str, messages: List[Chat], temperature: float) -> Dict[str, Any]:
         pass
 
     @abstractmethod
-    def agent_role(self, type: AttendeeType) -> str:
+    def agent_role(self, is_bot: bool) -> str:
         pass
 
 class CharacterResponse(BaseModel):
@@ -52,10 +50,10 @@ class OpenAIRequest(AIRequest):
         self.api_key = os.getenv("OPENAI_API_KEY")
         self.model = model
 
-    async def chat(self, system_prompt: str, messages: List[Message], temperature: float) -> Dict[str, Any]:
+    async def chat(self, system_prompt: str, chats: List[Chat], temperature: float) -> Dict[str, Any]:
         formatted_messages = [
             {"role": "system", "content": system_prompt},
-            *[{"role": self.agent_role(message.attendee_type), "content": message.text} for message in messages]
+            *[{"role": self.agent_role(chat.sender_id), "content": chat.content} for chat in chats]
         ]
 
         try:
@@ -75,17 +73,17 @@ class OpenAIRequest(AIRequest):
             logger.error(f"OpenAI API 오류: {str(e)}")
             raise Exception(f"OpenAI API 오류: {str(e)}")
 
-    def agent_role(self, type: AttendeeType) -> str:
-        return "assistant" if type == AttendeeType.bot else "user"
+    def agent_role(self, is_bot: bool) -> str:
+        return "assistant" if is_bot else "user"
 
 class ClaudeRequest(AIRequest):
     def __init__(self, model: str):
         self.api_key = os.getenv("ANTHROPIC_API_KEY")
         self.model = model
         
-    async def chat(self, system_prompt: str, messages: List[Message], temperature: float) -> Dict[str, Any]:
+    async def chat(self, system_prompt: str, chats: List[Chat], temperature: float) -> Dict[str, Any]:
         formatted_messages = [
-            *[{"role": self.agent_role(message.attendee_type), "content": message.text} for message in messages]
+            *[{"role": self.agent_role(chat.sender_id), "content": chat.content} for chat in chats]
         ]
         try:
             logger.info(f"Claude API 요청: 최근 메시지 갯수: {len(formatted_messages)}")
@@ -103,17 +101,17 @@ class ClaudeRequest(AIRequest):
             logger.error(f"Claude API 오류: {str(e)}")
             raise Exception(f"Claude API 오류: {str(e)}")
         
-    def agent_role(self, type: AttendeeType) -> str:
-        return "assistant" if type == AttendeeType.bot else "user"
+    def agent_role(self, is_bot: bool) -> str:
+        return "assistant" if is_bot else "user"
 
 class GeminiRequest(AIRequest):
     def __init__(self, model: str):
         self.api_key = os.getenv("GEMINI_API_KEY")
         self.model = model
 
-    async def chat(self, system_prompt: str, messages: List[Message], temperature: float) -> Dict[str, Any]:
+    async def chat(self, system_prompt: str, chats: List[Chat], temperature: float) -> Dict[str, Any]:
         formatted_messages = [
-            *[types.Content(role=self.agent_role(message.attendee_type), parts=[types.Part.from_text(text=message.text)]) for message in messages]
+            *[types.Content(role=self.agent_role(chat.sender_id), parts=[types.Part.from_text(text=chat.content)]) for chat in chats]
         ]
 
         try:
@@ -156,14 +154,14 @@ class GeminiRequest(AIRequest):
             logger.error(f"Gemini API 오류: {str(e)}")
             raise Exception(f"Gemini API 오류: {str(e)}")
 
-    def agent_role(self, type: AttendeeType) -> str:
-        return "model" if type == AttendeeType.bot else "user"
+    def agent_role(self, is_bot: bool) -> str:
+        return "model" if is_bot else "user"
     
 class ThirdPartyAIRequest:
     def __init__(self, prompt_context: PromptContext):
         self.prompt_context = prompt_context
 
-    async def chat(self, recent_messages: List[Message], ai_model: str, temperature: float = 0.7) -> str:
+    async def chat(self, recent_messages: List[Chat], ai_model: str, temperature: float = 0.7) -> str:
         if "gpt" in ai_model:
             service = OpenAIRequest(ai_model)
         elif "claude" in ai_model:
@@ -178,42 +176,42 @@ class ThirdPartyAIRequest:
         return response['message']
         
 
-class EmbeddingRequest:
-    def __init__(self, chat_repository: ChatRepository):
-        self.api_key = os.getenv("OPENAI_API_KEY")
-        self.model = "text-embedding-3-large"
-        self.chat_repository = chat_repository
+# class EmbeddingRequest:
+#     def __init__(self, chat_repository: ChatRepository):
+#         self.api_key = os.getenv("OPENAI_API_KEY")
+#         self.model = "text-embedding-3-large"
+#         self.chat_repository = chat_repository
 
-    async def create_msg_embedding(self, msg: str, msg_id: str) -> None:
-        try:
-            # request embeddings
-            async with AsyncOpenAI(api_key=self.api_key) as client:
-                response = await client.embeddings.create(
-                    model=self.model,
-                    input=msg
-                )
+#     async def create_msg_embedding(self, msg: str, msg_id: str) -> None:
+#         try:
+#             # request embeddings
+#             async with AsyncOpenAI(api_key=self.api_key) as client:
+#                 response = await client.embeddings.create(
+#                     model=self.model,
+#                     input=msg
+#                 )
 
-            # store them into db
-            embedding_data = response.data[0].embedding
-            self.chat_repository.create_embedding(embedding_data, msg_id)
-            logger.info(f"Embedding has been successfully created: corresponding msg_id: {msg_id}")
+#             # store them into db
+#             embedding_data = response.data[0].embedding
+#             self.chat_repository.create_embedding(embedding_data, msg_id)
+#             logger.info(f"Embedding has been successfully created: corresponding msg_id: {msg_id}")
 
-        except Exception as e:
-            logger.error(f"임베딩 생성 중 오류 발생: {str(e)}")
+#         except Exception as e:
+#             logger.error(f"임베딩 생성 중 오류 발생: {str(e)}")
 
-    # (int, str) = (msg_id, msg)
-    async def create_msg_embedding_batch(self, messages: List[Tuple[int, str]]) -> None:
-        try:
-            async with AsyncOpenAI(api_key=self.api_key) as client:
-                response = await client.embeddings.create(
-                    model=self.model,
-                    input=[item[1] for item in messages]
-                )
+#     # (int, str) = (msg_id, msg)
+#     async def create_msg_embedding_batch(self, messages: List[Tuple[int, str]]) -> None:
+#         try:
+#             async with AsyncOpenAI(api_key=self.api_key) as client:
+#                 response = await client.embeddings.create(
+#                     model=self.model,
+#                     input=[item[1] for item in messages]
+#                 )
 
-            embeddings = {}
-            for idx, item in enumerate(messages):
-                embeddings[item[0]] = response.data[idx].embedding
-            self.chat_repository.create_embeddings(embeddings)
+#             embeddings = {}
+#             for idx, item in enumerate(messages):
+#                 embeddings[item[0]] = response.data[idx].embedding
+#             self.chat_repository.create_embeddings(embeddings)
             
-        except Exception as e:
-            logger.error(f"임베딩 생성 (배치) 중 오류 발생: {str(e)}")
+#         except Exception as e:
+#             logger.error(f"임베딩 생성 (배치) 중 오류 발생: {str(e)}")

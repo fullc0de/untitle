@@ -13,7 +13,6 @@ app = Celery(
     broker=os.getenv("CELERY_BROKER_URL"),
     backend=os.getenv("CELERY_RESULT_BACKEND"),
     include=[
-        'app.tasks.msg_embedding_task', 
         'app.tasks.request_bot_msg_task'
     ]
 )

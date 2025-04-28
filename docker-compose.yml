@@ -1,14 +1,14 @@
 version: '3.8'
 
 services:
-  web:
+  api:
     build: .
     volumes:
       - .:/app
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=postgresql://user:password@db:5432/fastapi_db
+      - DATABASE_URL=postgresql://user:password@db:5432/annyong_db
       - REDIS_URL=redis://redis:6379/0
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
@@ -22,7 +22,7 @@ services:
     volumes:
       - .:/app
     environment:
-      - DATABASE_URL=postgresql://user:password@db:5432/fastapi_db
+      - DATABASE_URL=postgresql://user:password@db:5432/annyong_db
       - REDIS_URL=redis://redis:6379/0
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
@@ -39,7 +39,7 @@ services:
     environment:
       - POSTGRES_USER=user
       - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=fastapi_db
+      - POSTGRES_DB=annyong_db
     ports:
       - "5432:5432"
 

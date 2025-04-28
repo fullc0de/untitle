@@ -7,7 +7,6 @@ from app.models import User, Bot
 from app.dependencies.auth import get_current_user
 import logging
 
-from app.repositories.user_repository import UserRepository
 from app.services.user_service import UserService
 
 logger = logging.getLogger(__name__)
@@ -16,7 +15,7 @@ router = APIRouter()
 class BotResp(BaseModel):
     id: int
     name: str
-    property: dict
+    profile: dict
     created_at: datetime
     updated_at: datetime
 
@@ -25,16 +24,17 @@ async def get_bots(
     current_user: User = Depends(get_current_user),
     session: Session = Depends(get_session)
 ):
-    user_service = UserService(session, UserRepository(session))
-    bots = user_service.get_bots()
-    return [convert_bot_to_bot_resp(bot) for bot in bots]
+    user_service = UserService(session)
+    # bots = user_service.get_bots()
+    # return [convert_bot_to_bot_resp(bot) for bot in bots]
+    return []
 
 
 def convert_bot_to_bot_resp(bot: Bot) -> BotResp:
     return BotResp(
         id=bot.id,
         name=bot.name,
-        property=bot.property,
+        profile=bot.profile,
         created_at=bot.created_at,
         updated_at=bot.updated_at
     )

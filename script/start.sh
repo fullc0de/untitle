@@ -2,7 +2,7 @@
 set -e
 
 # Wait for the database to be ready
-until PGPASSWORD=$POSTGRES_PASSWORD psql -h "db" -U "user" -d "fastapi_db" -c '\q'; do
+until PGPASSWORD=$POSTGRES_PASSWORD psql -h "db" -U "user" -d "annyong_db" -c '\q'; do
   >&2 echo "Postgres is unavailable - sleeping"
   sleep 1
 done

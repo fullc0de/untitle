@@ -5,11 +5,8 @@ from contextlib import asynccontextmanager
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
-from sqladmin import Admin, ModelView
-from app.database import engine
-from app.models.message import Message
 from fastapi.staticfiles import StaticFiles
+from app.database import engine
 from app.apis.chats import router as chats_router
 from app.apis.auth import router as auth_router
 from app.apis.users import router as users_router
@@ -59,6 +56,12 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 admin = setup_admin(app, engine)
 
+# Swagger UI에 Authorization 헤더 추가
+app.swagger_ui_init_oauth = {
+    "usePkceWithAuthorizationCodeGrant": True,
+    "persistAuthorization": True,
+}
+
 allowed_origins = os.getenv("ALLOWED_ORIGINS", "").split(",")
 app.add_middleware(
     CORSMiddleware,
@@ -69,46 +72,8 @@ app.add_middleware(
 )
 
 app.mount("/socket.io", socket_app)
-app.mount("/static", StaticFiles(directory="app/static"), name="static")
+# app.mount("/static", StaticFiles(directory="app/static"), name="static")
 app.include_router(chats_router)
 app.include_router(auth_router)
 app.include_router(users_router)
 app.include_router(bots_router)
-
-###
-# 아래 부분은 프로젝트 테스트 코드임
-###
-
-@app.get("/")
-async def read_root():
-    return FileResponse("app/static/index.html", media_type="text/html")
-
-
-@app.get("/chat-test")
-async def chat_test():
-    logger.info("chat_test")
-    return FileResponse("app/static/chat.html", media_type="text/html")
-
-@app.get("/signup")
-async def signup_page():
-    return FileResponse("app/static/signup.html", media_type="text/html")
-
-@app.get("/signin")
-async def signin_page():
-    return FileResponse("app/static/signin.html", media_type="text/html")
-
-@app.get("/main")
-async def main_page():
-    return FileResponse("app/static/main.html", media_type="text/html")
-
-@app.get("/chatrooms")
-async def get_chatrooms_page():
-    return FileResponse("app/static/chatrooms.html", media_type="text/html")
-
-@app.get("/create-chatroom")
-async def get_create_chatroom_page():
-    return FileResponse("app/static/create-chatroom.html", media_type="text/html")
-
-@app.get("/chat")
-async def get_chat_page():
-    return FileResponse("app/static/chat.html", media_type="text/html")
