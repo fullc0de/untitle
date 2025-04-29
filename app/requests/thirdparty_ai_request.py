@@ -45,6 +45,39 @@ class AIResponse(BaseModel):
     messages: List[CharacterResponse]
     summary: str
 
+class OpenRouterRequest(AIRequest):
+    def __init__(self, model: str):
+        self.api_key = os.getenv("OPENROUTER_API_KEY")
+        self.model = model
+        self.base_url = "https://openrouter.ai/api/v1"
+
+    async def chat(self, system_prompt: str, chats: List[Chat], temperature: float) -> Dict[str, Any]:
+        formatted_messages = [
+            {"role": "system", "content": system_prompt},
+            *[{"role": self.agent_role(chat.sender_id), "content": chat.content} for chat in chats]
+        ]
+
+        try:
+            logger.info(f"OpenRouter API 요청: 최근 메시지 갯수: {len(formatted_messages)}")
+            logger.info(f"OpenRouter API 요청: formatted_messages: {formatted_messages}")
+            async with AsyncOpenAI(api_key=self.api_key, base_url=self.base_url) as client:
+                assistant_message = await client.beta.chat.completions.parse(
+                    max_tokens=8192,
+                    messages=formatted_messages,
+                    model= "google/gemini-2.0-flash-001",
+                    temperature=temperature,
+                    response_format=AIResponse,
+                    max_completion_tokens=2048
+                )
+            logger.info(f"OpenRouter API 원본 응답: {assistant_message}")
+            return {"message": assistant_message.choices[0].message.content}
+        except Exception as e:
+            logger.error(f"OpenRouter API 오류: {str(e)}")
+            raise Exception(f"OpenRouter API 오류: {str(e)}")
+
+    def agent_role(self, is_bot: bool) -> str:
+        return "assistant" if is_bot else "user"
+    
 class OpenAIRequest(AIRequest):
     def __init__(self, model: str):
         self.api_key = os.getenv("OPENAI_API_KEY")
@@ -168,6 +201,8 @@ class ThirdPartyAIRequest:
             service = ClaudeRequest(ai_model)
         elif "gemini" in ai_model:
             service = GeminiRequest(ai_model)
+        elif "openrouter" in ai_model:
+            service = OpenRouterRequest(ai_model)
         else:
             raise ValueError(f"지원하지 않는 AI 모델입니다: {ai_model}")
 
