@@ -1,10 +1,9 @@
 from fastapi import HTTPException
 from dotenv import load_dotenv
 from sqlmodel import Session
+from app.repositories.chat_repository import ChatRepository
 from app.services.transaction_service import TransactionService
-from app.models.chatroom import Chatroom
-from app.models.chat import Chat
-from app.services import enum
+from app.models import Chatroom, Chat, Bot
 from typing import List, Tuple, Optional
 from app.tasks.request_bot_msg_task import request_bot_msg_task
 import logging
@@ -16,18 +15,23 @@ logger = logging.getLogger(__name__)
 
 
 class ChatService(TransactionService):
-    def __init__(self, session: Session):
+    def __init__(self, session: Session, chat_repository: ChatRepository):
         super().__init__(session)
+        self.chat_repository = chat_repository
 
-    # def create_chatroom(self, me_id: int, nickname: str, user_persona_desc: str, age: int, gender: str, peer_ids: List[int]) -> Tuple[Chatroom]:
-    #     def transaction(session: Session):
-    #         chatroom = self.chat_repository.create_chatroom()
-    #         me_attendee = self.chat_repository.add_attendee_to_chatroom(chatroom.id, me_id, AttendeeType.user)
-    #         self.chat_repository.create_user_persona(me_id, chatroom.id, me_attendee.id, nickname, user_persona_desc, age, gender)
-    #         for peer_id in peer_ids:
-    #             self.chat_repository.add_attendee_to_chatroom(chatroom.id, peer_id, AttendeeType.bot)
-    #         return chatroom
-    #     return self.execute_in_transaction(transaction)
+    def create_chatroom(self, me_id: int) -> Chatroom:
+        def transaction(session: Session):
+            bot = self.chat_repository.create_bot(name="", owner_id=me_id)
+            session.flush()
+            chatroom = self.chat_repository.create_chatroom(me_id, bot.id)
+            return chatroom
+        return self.execute_in_transaction(transaction)
+    
+    def get_chatrooms_by_user_id(self, user_id: int) -> List[Chatroom]:
+        return self.chat_repository.get_chatrooms_by_user_id(user_id)
+    
+    def get_bots(self, owner_id: int) -> List[Bot]:
+        return self.chat_repository.get_bots(owner_id)
     
     # def get_chatrooms_by_user_id(self, user_id: int) -> List[Chatroom]:
     #     user = self.user_repository.get_attendees_by_user_id(user_id)

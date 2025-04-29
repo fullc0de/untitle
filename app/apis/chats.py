@@ -1,5 +1,6 @@
 from datetime import datetime
 from fastapi import APIRouter, Query, Body, Depends, HTTPException
+from app.repositories.chat_repository import ChatRepository
 from app.services.chat_service import ChatService
 from app.services.user_service import UserService
 from sqlmodel import Session
@@ -29,36 +30,21 @@ class AttendeeResp(BaseModel):
 class ChatroomResp(BaseModel):
     id: int
     property: Optional[dict]
-    attendees: List[AttendeeResp]
+    owner_id: int
+    bot_id: int
     created_at: datetime
     updated_at: datetime
 
-class CreateChatroomParam(BaseModel):
-    bot_ids: List[int]
-    nickname: str
-    user_persona_desc: str
-    age: int
-    gender: str
 
 @router.post("/api/chatrooms", response_model=ChatroomResp)
 def create_chatroom(
-    create_chatroom_param: CreateChatroomParam,
     current_user: User = Depends(get_current_user),
     session: Session = Depends(get_session)
 ):
     try:
-        chat_service = ChatService(session)
-        # chatroom = chat_service.create_chatroom(
-        #     current_user.id, 
-        #     create_chatroom_param.nickname,
-        #     create_chatroom_param.user_persona_desc,
-        #     create_chatroom_param.age,
-        #     create_chatroom_param.gender,
-        #     create_chatroom_param.bot_ids
-        # )
-
-        # return get_chatroom_resp(chatroom, session)
-        return {}                
+        chat_service = ChatService(session, ChatRepository(session))
+        chatroom = chat_service.create_chatroom(current_user.id)
+        return chatroom               
     except Exception as e:
         logger.error(f"채팅방 생성 중 오류 발생: {str(e)}")
         raise HTTPException(
@@ -66,38 +52,33 @@ def create_chatroom(
             detail=f"채팅방 생성 중 오류가 발생했습니다: {str(e)}"
         )
 
-
 @router.get("/api/chatrooms", response_model=List[ChatroomResp])
 def get_chatrooms(
     current_user: User = Depends(get_current_user),
     session: Session = Depends(get_session)
 ):
     try:
-        chat_service = ChatService(session)
-        # chatrooms = chat_service.get_chatrooms_by_user_id(current_user.id)
-
-        # chatroomsResp = []
-        # for chatroom in chatrooms:
-        #     chatroomsResp.append(get_chatroom_resp(chatroom, session))
+        chat_service = ChatService(session, ChatRepository(session))
+        chatrooms = chat_service.get_chatrooms_by_user_id(current_user.id)
 
         # logger.info(f"chatroomsResp: {json.dumps(chatroomsResp, default=str)}")
-        return []
+        return chatrooms
 
     except Exception as e:
         logger.error(f"Error in get_chatrooms: {str(e)}")
         raise HTTPException(status_code=500, detail=f"채팅방 조회 중 오류가 발생했습니다: {str(e)}")
 
-@router.get("/api/chatrooms/{chatroom_id}", response_model=ChatroomResp)
-def get_chatroom(
-    chatroom_id: int,
-    current_user: User = Depends(get_current_user),
-    session: Session = Depends(get_session)
-):
-    chat_service = ChatService(session)
-    # chatroom = chat_service.get_chatroom_by_id(chatroom_id)
-    # if not chatroom:
-    #     raise HTTPException(status_code=404, detail="채팅방을 찾을 수 없습니다.")
-    return ChatroomResp(id=chatroom_id, property={}, attendees=[], created_at=datetime.now(), updated_at=datetime.now())
+# @router.get("/api/chatrooms/{chatroom_id}", response_model=ChatroomResp)
+# def get_chatroom(
+#     chatroom_id: int,
+#     current_user: User = Depends(get_current_user),
+#     session: Session = Depends(get_session)
+# ):
+#     chat_service = ChatService(session)
+#     # chatroom = chat_service.get_chatroom_by_id(chatroom_id)
+#     # if not chatroom:
+#     #     raise HTTPException(status_code=404, detail="채팅방을 찾을 수 없습니다.")
+#     return ChatroomResp(id=chatroom_id, property={}, attendees=[], created_at=datetime.now(), updated_at=datetime.now())
 
 # class ChatParam(BaseModel):
 #     chatroom_id: int
