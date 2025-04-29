@@ -11,9 +11,10 @@ class ChatRepository:
     def __init__(self, session: Session):
         self.session = session
 
-    def create_chatroom(self, me_id: int, bot_id: int) -> Chatroom:
-        chatroom = Chatroom(owner_id=me_id, bot_id=bot_id)
+    def create_chatroom(self, me_id: int) -> Chatroom:
+        chatroom = Chatroom(owner_id=me_id)
         self.session.add(chatroom)
+        self.session.flush()
         return chatroom
     
     def get_chatroom_by_id(self, chatroom_id: int) -> Chatroom:
@@ -26,9 +27,10 @@ class ChatRepository:
     
     
     ## bot
-    def create_bot(self, name: str, owner_id: int) -> Bot:
-        bot = Bot(name=name, owner_id=owner_id)
+    def create_bot(self, owner_id: int, chatroom_id: int) -> Bot:
+        bot = Bot(owner_id=owner_id, chatroom_id=chatroom_id)
         self.session.add(bot)
+        self.session.flush()
         return bot
     
     def get_bots(self, owner_id: int) -> List[Bot]:

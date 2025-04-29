@@ -30,6 +30,7 @@ def upgrade() -> None:
         sa.Column('sender_type', sender_type, nullable=False),
         sa.Column('created_at', sa.DateTime(), nullable=False, index=True),
         sa.Column('updated_at', sa.DateTime(), nullable=False),
+        # 챗룸과 외래키는 일부러 걸지 않았음. 나중에 별도 디비로 빼야 할 수도 있음.
         sa.PrimaryKeyConstraint('id')
     )
 

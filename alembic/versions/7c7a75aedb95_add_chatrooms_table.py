@@ -12,8 +12,8 @@ import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import JSONB
 
 # revision identifiers, used by Alembic.
-revision: str = '7c7a75aedb95'
-down_revision: Union[str, None] = '232a7965912e'
+revision: str = '232a7965912e'
+down_revision: Union[str, None] = 'ee151bdff133'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
@@ -23,12 +23,11 @@ def upgrade() -> None:
         'chatrooms',
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('owner_id', sa.Integer(), nullable=False),
-        sa.Column('bot_id', sa.Integer(), nullable=False),
+        sa.Column('title', sa.String(), nullable=True),
         sa.Column('property', JSONB, nullable=False, server_default='{}'),
         sa.Column('created_at', sa.DateTime(), nullable=False),
         sa.Column('updated_at', sa.DateTime(), nullable=False),
-        sa.ForeignKeyConstraint(['owner_id'], ['users.id'], ),
-        sa.ForeignKeyConstraint(['bot_id'], ['bots.id'], ),
+        sa.ForeignKeyConstraint(['owner_id'], ['users.id'], ondelete='CASCADE'),
         sa.PrimaryKeyConstraint('id')
     )
 

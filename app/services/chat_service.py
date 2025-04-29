@@ -21,9 +21,8 @@ class ChatService(TransactionService):
 
     def create_chatroom(self, me_id: int) -> Chatroom:
         def transaction(session: Session):
-            bot = self.chat_repository.create_bot(name="", owner_id=me_id)
-            session.flush()
-            chatroom = self.chat_repository.create_chatroom(me_id, bot.id)
+            chatroom = self.chat_repository.create_chatroom(me_id)
+            bot = self.chat_repository.create_bot(owner_id=me_id, chatroom_id=chatroom.id)
             return chatroom
         return self.execute_in_transaction(transaction)
     

@@ -1,54 +1,40 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Form
 from pydantic import BaseModel
 from sqlmodel import Session
 from app.database import get_session
 from app.repositories.auth_repository import AuthRepository
 from app.services.auth_service import AuthService
+from app.apis.responses.signup_resp import SignUpResponse
+from app.apis.responses.signin_resp import SignInResponse
 import logging
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
-class SignUpRequest(BaseModel):
-    username: str
-    password: str
-
-class SignUpResponse(BaseModel):
-    id: int
-    username: str
-    message: str = "Successfully signed up"
-    token: str
-
 @router.post("/api/signup", response_model=SignUpResponse)
 async def signup(
-    request: SignUpRequest, 
+    username: str = Form(...),
+    password: str = Form(...),
     session: Session = Depends(get_session)
 ):
     auth_service = AuthService(session, AuthRepository(session))
     result = await auth_service.signup(
-        username=request.username,
-        password=request.password
+        username=username,
+        password=password
     )
     return SignUpResponse(id=result.id, username=result.nickname, token=result.token)
 
 
-class SignInRequest(BaseModel):
-    username: str
-    password: str
-
-class SignInResponse(BaseModel):
-    id: int
-    username: str
-    token: str
 
 @router.post("/api/signin", response_model=SignInResponse)
 async def signin(
-    request: SignInRequest, 
+    username: str = Form(...),
+    password: str = Form(...),
     session: Session = Depends(get_session)
 ):
     auth_service = AuthService(session, AuthRepository(session))
     result = await auth_service.signin(
-        username=request.username,
-        password=request.password
+        username=username,
+        password=password
     )
     return SignInResponse(id=result.id, username=result.nickname, token=result.token)

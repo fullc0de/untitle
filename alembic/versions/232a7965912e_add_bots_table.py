@@ -13,8 +13,8 @@ from sqlalchemy.dialects.postgresql import JSONB
 
 
 # revision identifiers, used by Alembic.
-revision: str = '232a7965912e'
-down_revision: Union[str, None] = 'ee151bdff133'
+revision: str = '7c7a75aedb95'
+down_revision: Union[str, None] = '232a7965912e'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
@@ -23,12 +23,14 @@ def upgrade() -> None:
     op.create_table(
         'bots',
         sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('name', sa.String(), nullable=False, index=True),
+        sa.Column('name', sa.String(), nullable=True, index=True),
         sa.Column('owner_id', sa.Integer(), nullable=False, index=True),
+        sa.Column('chatroom_id', sa.Integer(), nullable=False, index=True),
         sa.Column('profile', JSONB, nullable=True, server_default='{}'),
         sa.Column('created_at', sa.DateTime(), nullable=False),
         sa.Column('updated_at', sa.DateTime(), nullable=False),
         sa.ForeignKeyConstraint(['owner_id'], ['users.id'], ),
+        sa.ForeignKeyConstraint(['chatroom_id'], ['chatrooms.id'], ondelete='CASCADE'),
         sa.PrimaryKeyConstraint('id')
     )
 

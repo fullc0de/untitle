@@ -6,21 +6,14 @@ from sqlmodel import Session
 from app.database import get_session
 from app.models import User, Bot
 from app.dependencies.auth import get_current_user
-import logging
-
 from app.services.chat_service import ChatService
 from app.repositories.chat_repository import ChatRepository
+from app.apis.responses.bot_resp import BotResp
+
+import logging
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
-
-class BotResp(BaseModel):
-    id: int
-    name: str
-    owner_id: int
-    profile: dict
-    created_at: datetime
-    updated_at: datetime
 
 @router.get("/api/bots", response_model=List[BotResp])
 async def get_bots(

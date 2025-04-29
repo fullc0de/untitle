@@ -8,32 +8,16 @@ from app.database import get_session, engine
 from pydantic import BaseModel, Field, field_validator
 from app.dependencies.auth import get_current_user
 from app.models import User, Chatroom
-from app.apis import enum as api_enum
-from typing import List, Dict, Any, Literal, Optional
+from app.apis.responses.chatroom_resp import ChatroomResp
+from typing import List
 import logging
 import json
+
+
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
-
-class AttendeeParam(BaseModel):
-    id: int
-    name: str
-    role: str
-
-class AttendeeResp(BaseModel):
-    id: int
-    name: str
-    is_bot: bool
-
-class ChatroomResp(BaseModel):
-    id: int
-    property: Optional[dict]
-    owner_id: int
-    bot_id: int
-    created_at: datetime
-    updated_at: datetime
 
 
 @router.post("/api/chatrooms", response_model=ChatroomResp)

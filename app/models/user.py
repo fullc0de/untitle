@@ -2,9 +2,12 @@ from sqlmodel import SQLModel, Field
 from datetime import datetime
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy import Column
-from typing import Optional, List
+from typing import Optional, List, TYPE_CHECKING
 import hashlib
 from sqlmodel import Relationship
+
+if TYPE_CHECKING:
+    from app.models import Bot, Chatroom
 
 class User(SQLModel, table=True):
     __tablename__ = "users"
