@@ -22,9 +22,9 @@ class Chatroom(SQLModel, table=True):
     owner: Optional["User"] = Relationship(back_populates="chatrooms")
     bot: Optional["Bot"] = Relationship(back_populates="chatroom")
 
-    # 외래키 제약조건 없이 관계 설정
-    chats: List["Chat"] = Relationship(
-        sa_relationship=relationship(
-            "Chat", primaryjoin="and_(Chatroom.id==Chat.chatroom_id)", foreign_keys="Chat.chatroom_id"
-        )
-    )
+    # # 외래키 제약조건 없이 관계 설정
+    # chats: List["Chat"] = Relationship(
+    #     sa_relationship=relationship(
+    #         "Chat", primaryjoin="and_(Chatroom.id==Chat.chatroom_id)", foreign_keys="Chat.chatroom_id"
+    #     )
+    # )

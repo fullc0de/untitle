@@ -22,4 +22,4 @@ async def get_bots(
 ):
     chat_service = ChatService(session, ChatRepository(session))
     bots = chat_service.get_bots(current_user.id)
-    return bots
+    return [BotResp.from_orm(bot) for bot in bots]

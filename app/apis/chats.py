@@ -1,5 +1,6 @@
 from datetime import datetime
 from fastapi import APIRouter, Query, Body, Depends, HTTPException
+from app.apis.enum import SenderType
 from app.repositories.chat_repository import ChatRepository
 from app.services.chat_service import ChatService
 from app.services.user_service import UserService
@@ -8,7 +9,9 @@ from app.database import get_session, engine
 from pydantic import BaseModel, Field, field_validator
 from app.dependencies.auth import get_current_user
 from app.models import User, Chatroom
+from app.apis.request_params.chat_param import CreateChatParam
 from app.apis.responses.chatroom_resp import ChatroomResp
+from app.apis.responses.chat_resp import ChatResp
 from typing import List
 import logging
 import json
@@ -28,7 +31,7 @@ def create_chatroom(
     try:
         chat_service = ChatService(session, ChatRepository(session))
         chatroom = chat_service.create_chatroom(current_user.id)
-        return chatroom               
+        return ChatroomResp.from_orm(chatroom)               
     except Exception as e:
         logger.error(f"채팅방 생성 중 오류 발생: {str(e)}")
         raise HTTPException(
@@ -44,83 +47,54 @@ def get_chatrooms(
     try:
         chat_service = ChatService(session, ChatRepository(session))
         chatrooms = chat_service.get_chatrooms_by_user_id(current_user.id)
-
-        # logger.info(f"chatroomsResp: {json.dumps(chatroomsResp, default=str)}")
-        return chatrooms
-
+        return [ChatroomResp.from_orm(chatroom) for chatroom in chatrooms]
     except Exception as e:
         logger.error(f"Error in get_chatrooms: {str(e)}")
         raise HTTPException(status_code=500, detail=f"채팅방 조회 중 오류가 발생했습니다: {str(e)}")
 
-# @router.get("/api/chatrooms/{chatroom_id}", response_model=ChatroomResp)
-# def get_chatroom(
-#     chatroom_id: int,
-#     current_user: User = Depends(get_current_user),
-#     session: Session = Depends(get_session)
-# ):
-#     chat_service = ChatService(session)
-#     # chatroom = chat_service.get_chatroom_by_id(chatroom_id)
-#     # if not chatroom:
-#     #     raise HTTPException(status_code=404, detail="채팅방을 찾을 수 없습니다.")
-#     return ChatroomResp(id=chatroom_id, property={}, attendees=[], created_at=datetime.now(), updated_at=datetime.now())
-
-# class ChatParam(BaseModel):
-#     chatroom_id: int
-#     sender_id: int
-#     msg: str
-
-# class ChatResp(BaseModel):
-#     id: int
-#     text: str
-#     chatroom_id: int
-#     attendee_type: api_enum.SenderType = Field(serialization_alias="sender_type")
-#     created_at: datetime
-
-#     @field_validator("attendee_type", mode="before")
-#     @classmethod
-#     def convert_attendee_type(cls, v: AttendeeType) -> api_enum.SenderType:
-#         if v == AttendeeType.user:
-#             return api_enum.SenderType.user
-#         else:
-#             return api_enum.SenderType.bot
+@router.get("/api/chatrooms/{chatroom_id}", response_model=ChatroomResp)
+def get_chatroom(
+    chatroom_id: int,
+    current_user: User = Depends(get_current_user),
+    session: Session = Depends(get_session)
+):
+    try:
+        chat_service = ChatService(session, ChatRepository(session))
+        chatroom = chat_service.get_chatroom_by_id(chatroom_id)
+        resp = ChatroomResp.from_orm(chatroom)
+        logger.info(f"chatroomResp: {json.dumps(resp, default=str)}")
+        return resp
+    except Exception as e:
+        logger.error(f"Error in get_chatroom: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"채팅방 조회 중 오류가 발생했습니다: {str(e)}")
 
 
-# @router.post("/api/chats", response_model=ChatResp)
-# async def post_chats(
-#     chat_param: ChatParam,
-#     current_user: User = Depends(get_current_user),
-#     session: Session = Depends(get_session)
-# ):
-#     try:
-#         # 유저 메시지 저장
-#         logger.info(f"user message: {chat_param.msg}")
-#         logger.info(f"attendee_id: {chat_param.sender_id}")
-#         logger.info(f"chatroom_id: {chat_param.chatroom_id}")
-#         chat_service = ChatService(session, ChatRepository(session), UserRepository(session))
-#         message = chat_service.make_turn(chat_param.msg, chat_param.chatroom_id, chat_param.sender_id, AttendeeType.user)
-
-#         return message
-#     except Exception as e:
-#         logger.error(f"Error in post_chats: {str(e)}")
+@router.post("/api/chats", response_model=ChatResp)
+async def post_chats(
+    chat_param: CreateChatParam,
+    current_user: User = Depends(get_current_user),
+    session: Session = Depends(get_session)
+):
+    try:
+        # 유저 메시지 저장
+        logger.info(f"user message: {chat_param.text}")
+        logger.info(f"chatroom_id: {chat_param.chatroom_id}")
+        chat_service = ChatService(session, ChatRepository(session))
+        chat = chat_service.make_turn(chat_param.text, chat_param.chatroom_id, current_user.id, SenderType.user)
+        return ChatResp.from_orm(chat)
+    except Exception as e:
+        logger.error(f"Error in post_chats: {str(e)}")
 
 
-# @router.get("/api/chats", response_model=List[ChatResp])
-# def get_chats(
-#     chatroom_id: int,
-#     current_user: User = Depends(get_current_user),
-#     session: Session = Depends(get_session)
-# ):
-#     chat_service = ChatService(session, ChatRepository(session), UserRepository(session))
-#     user_service = UserService(session, UserRepository(session))
-#     chatroom = chat_service.get_chatroom_by_id(chatroom_id)
-#     messages = chat_service.get_all_messages(chatroom_id)
-#     user_persona = user_service.user_persona_by_user_id(current_user.id, chatroom_id)
-
-#     chatsResp = []
-#     for message in messages:
-#         chatsResp.append(get_chat_resp(chatroom, message, user_persona, session))
-#     return chatsResp
-
+@router.get("/api/chats", response_model=List[ChatResp])
+def get_chats(
+    chatroom_id: int,
+    current_user: User = Depends(get_current_user),
+    session: Session = Depends(get_session)
+):
+    chat_service = ChatService(session, ChatRepository(session))
+    messages = chat_service.get_all_messages(chatroom_id)
+    return [ChatResp.from_orm(message) for message in messages]
 
 # @router.post("/api/reset_chats")
 # def reset_chats(

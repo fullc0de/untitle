@@ -12,11 +12,14 @@ class BotResp(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-    def __init__(self, bot: Bot):
-        self.id = bot.id
-        self.name = bot.name
-        self.owner_id = bot.owner_id
-        self.chatroom_id = bot.chatroom_id
-        self.profile = bot.profile
-        self.created_at = bot.created_at
-        self.updated_at = bot.updated_at
+    @classmethod
+    def from_orm(cls, bot: Bot) -> "BotResp":
+        return cls(
+            id=bot.id,
+            name=bot.name,
+            owner_id=bot.owner_id,
+            chatroom_id=bot.chatroom_id,
+            profile=bot.profile,
+            created_at=bot.created_at,
+            updated_at=bot.updated_at
+        )

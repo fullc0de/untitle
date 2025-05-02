@@ -9,7 +9,7 @@ from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
-
+from sqlalchemy.dialects.postgresql import JSONB
 
 # revision identifiers, used by Alembic.
 revision: str = '46958ac11f21'
@@ -24,7 +24,7 @@ def upgrade() -> None:
     op.create_table(
         'chats',
         sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('content', sa.String(), nullable=False),
+        sa.Column('content', JSONB, nullable=False, server_default='{}'),
         sa.Column('chatroom_id', sa.Integer(), nullable=False, index=True),
         sa.Column('sender_id', sa.Integer(), nullable=False),
         sa.Column('sender_type', sender_type, nullable=False),

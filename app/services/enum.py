@@ -1,5 +1,5 @@
 from enum import Enum
 
-class AttendeeType(str, Enum):
+class SenderType(str, Enum):
     user = "user"
     bot = "bot"

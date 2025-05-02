@@ -1,6 +1,7 @@
 from fastapi import HTTPException
 from dotenv import load_dotenv
 from sqlmodel import Session
+from app.services.enum import SenderType
 from app.repositories.chat_repository import ChatRepository
 from app.services.transaction_service import TransactionService
 from app.models import Chatroom, Chat, Bot
@@ -29,6 +30,9 @@ class ChatService(TransactionService):
     def get_chatrooms_by_user_id(self, user_id: int) -> List[Chatroom]:
         return self.chat_repository.get_chatrooms_by_user_id(user_id)
     
+    def get_chatroom_by_id(self, chatroom_id: int) -> Chatroom:
+        return self.chat_repository.get_chatroom_by_id(chatroom_id)
+
     def get_bots(self, owner_id: int) -> List[Bot]:
         return self.chat_repository.get_bots(owner_id)
     
@@ -46,12 +50,14 @@ class ChatService(TransactionService):
     # def load_chatroom_attendees(self, chatroom: Chatroom) -> Chatroom:
     #     return self.chat_repository.session.refresh(chatroom, ["attendees"])
     
-    # def make_turn(self, text: str, chatroom_id: int, sender_id: int, sender_type: AttendeeType) -> Message:
-    #     def transaction(session: Session):
-    #         msg = self.chat_repository.create_message(text, chatroom_id, sender_id, sender_type)
-    #         request_bot_msg_task.delay(chatroom_id, 1.0)
-    #         return msg
-    #     return self.execute_in_transaction(transaction)
+    def make_turn(self, text: str, chatroom_id: int, sender_id: int, sender_type: SenderType) -> Chat:
+        content = {
+            "text": text
+            }
+        msg = self.chat_repository.create_chat(content, chatroom_id, sender_id, sender_type)
+        self.session.commit()
+        request_bot_msg_task.delay(chatroom_id, 1.0)
+        return msg
 
     # def create_message(self, text: str, chatroom_id: int, sender_id: int, sender_type: AttendeeType) -> Message:
     #     def transaction(session: Session):
@@ -64,5 +70,5 @@ class ChatService(TransactionService):
     #         self.chat_repository.delete_all_messages(chatroom_id)
     #     return self.execute_in_transaction(transaction)
     
-    # def get_all_messages(self, chatroom_id: int) -> List[Message]:
-    #     return self.chat_repository.get_all_messages(chatroom_id)
+    def get_all_messages(self, chatroom_id: int) -> List[Chat]:
+        return self.chat_repository.get_all_messages(chatroom_id)

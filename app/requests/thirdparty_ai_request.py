@@ -9,7 +9,9 @@ from google import genai
 from google.genai import types
 from pydantic import BaseModel
 from app.models import Chat
+from app.models.chat import SenderType
 import app.prompts as prompts
+import json
 load_dotenv()
 
 logging.basicConfig(level=logging.INFO)
@@ -45,6 +47,51 @@ class AIResponse(BaseModel):
     messages: List[CharacterResponse]
     summary: str
 
+    @classmethod
+    def json_schema(cls) -> Dict[str, Any]:
+        return {
+            "type": "json_schema",
+            "json_schema": {
+                "name": "ai_response",
+                "strict": True,
+                "schema": {
+                    "type": "object",
+                    "properties": {
+                        "messages": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "description": "캐릭터의 이름"
+                                    },
+                                    "is_main_character": {
+                                        "type": "boolean",
+                                        "description": "주인공 여부"
+                                    },
+                                    "is_storyteller": {
+                                        "type": "boolean",
+                                        "description": "내레이터 여부"
+                                    },
+                                    "message": {
+                                        "type": "string",
+                                        "description": "캐릭터의 메시지"
+                                    }
+                                },
+                                "required": ["name", "is_main_character", "is_storyteller", "message"]
+                            }
+                        },
+                        "summary": {
+                            "type": "string",
+                            "description": "대화 요약"
+                        }
+                    },
+                    "required": ["messages", "summary"]
+                }
+            }
+        }
+
 class OpenRouterRequest(AIRequest):
     def __init__(self, model: str):
         self.api_key = os.getenv("OPENROUTER_API_KEY")
@@ -54,23 +101,25 @@ class OpenRouterRequest(AIRequest):
     async def chat(self, system_prompt: str, chats: List[Chat], temperature: float) -> Dict[str, Any]:
         formatted_messages = [
             {"role": "system", "content": system_prompt},
-            *[{"role": self.agent_role(chat.sender_id), "content": chat.content} for chat in chats]
+            *[{"role": self.agent_role(chat.sender_type == SenderType.bot), "content": chat.content["text"]} for chat in chats]
         ]
 
         try:
             logger.info(f"OpenRouter API 요청: 최근 메시지 갯수: {len(formatted_messages)}")
             logger.info(f"OpenRouter API 요청: formatted_messages: {formatted_messages}")
             async with AsyncOpenAI(api_key=self.api_key, base_url=self.base_url) as client:
-                assistant_message = await client.beta.chat.completions.parse(
+                response = await client.chat.completions.create(
                     max_tokens=8192,
                     messages=formatted_messages,
-                    model= "google/gemini-2.0-flash-001",
+                    model="google/gemini-2.0-flash-001",
                     temperature=temperature,
-                    response_format=AIResponse,
-                    max_completion_tokens=2048
+                    response_format=AIResponse.json_schema()
                 )
-            logger.info(f"OpenRouter API 원본 응답: {assistant_message}")
-            return {"message": assistant_message.choices[0].message.content}
+                content = response.choices[0].message.content
+                logger.info(f"OpenRouter API 응답 원본: {content}")
+                
+                return {"message": content}
+                    
         except Exception as e:
             logger.error(f"OpenRouter API 오류: {str(e)}")
             raise Exception(f"OpenRouter API 오류: {str(e)}")
@@ -86,7 +135,7 @@ class OpenAIRequest(AIRequest):
     async def chat(self, system_prompt: str, chats: List[Chat], temperature: float) -> Dict[str, Any]:
         formatted_messages = [
             {"role": "system", "content": system_prompt},
-            *[{"role": self.agent_role(chat.sender_id), "content": chat.content} for chat in chats]
+            *[{"role": self.agent_role(chat.sender_type == SenderType.bot), "content": chat.content["text"]} for chat in chats]
         ]
 
         try:
@@ -116,7 +165,7 @@ class ClaudeRequest(AIRequest):
         
     async def chat(self, system_prompt: str, chats: List[Chat], temperature: float) -> Dict[str, Any]:
         formatted_messages = [
-            *[{"role": self.agent_role(chat.sender_id), "content": chat.content} for chat in chats]
+            *[{"role": self.agent_role(chat.sender_type == SenderType.bot), "content": chat.content["text"]} for chat in chats]
         ]
         try:
             logger.info(f"Claude API 요청: 최근 메시지 갯수: {len(formatted_messages)}")
@@ -144,7 +193,7 @@ class GeminiRequest(AIRequest):
 
     async def chat(self, system_prompt: str, chats: List[Chat], temperature: float) -> Dict[str, Any]:
         formatted_messages = [
-            *[types.Content(role=self.agent_role(chat.sender_id), parts=[types.Part.from_text(text=chat.content)]) for chat in chats]
+            *[types.Content(role=self.agent_role(chat.sender_type == SenderType.bot), parts=[types.Part.from_text(text=chat.content["text"])]) for chat in chats]
         ]
 
         try:
