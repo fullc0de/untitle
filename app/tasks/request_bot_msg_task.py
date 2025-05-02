@@ -35,7 +35,7 @@ def request_bot_msg_task(chatroom_id: int, temperature=0.7) -> MsgInfo:
                 logger.info(f"recent_messages: {recent_messages.reverse()}")
 
                 prompt_context = PromptContext()
-                prompt_context.prompt_template = prompts.prompt_unknown_template
+                prompt_context.prompt_template = prompts.prompt_unknown_template_2
                 logger.info(f"prompt: {prompt_context.prompt_template}")
 
                 ai_model = "openrouter"
