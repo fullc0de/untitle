@@ -1,17 +1,17 @@
 from abc import ABC, abstractmethod
 import os
 from dotenv import load_dotenv
-from typing import Dict, List, Any, Tuple, Optional
+from typing import Dict, List, Any
 import logging
 from anthropic import AsyncAnthropic
 from openai import AsyncOpenAI
 from google import genai
 from google.genai import types
-from pydantic import BaseModel
 from app.models import Chat
 from app.models.chat import SenderType
 import app.prompts as prompts
-import json
+from app.requests.ai_resp_scheme import CharacterJsonResponse
+
 load_dotenv()
 
 logging.basicConfig(level=logging.INFO)
@@ -35,63 +35,6 @@ class AIRequest(ABC):
     @abstractmethod
     def agent_role(self, is_bot: bool) -> str:
         pass
-
-class CharacterResponse(BaseModel):
-    name: str
-    #attendee_id: Optional[int] = None
-    is_main_character: bool
-    is_storyteller: bool
-    message: str
-
-class AIResponse(BaseModel):
-    messages: List[CharacterResponse]
-    summary: str
-
-    @classmethod
-    def json_schema(cls) -> Dict[str, Any]:
-        return {
-            "type": "json_schema",
-            "json_schema": {
-                "name": "ai_response",
-                "strict": True,
-                "schema": {
-                    "type": "object",
-                    "properties": {
-                        "messages": {
-                            "type": "array",
-                            "items": {
-                                "type": "object",
-                                "properties": {
-                                    "name": {
-                                        "type": "string",
-                                        "description": "캐릭터의 이름"
-                                    },
-                                    "is_main_character": {
-                                        "type": "boolean",
-                                        "description": "주인공 여부"
-                                    },
-                                    "is_storyteller": {
-                                        "type": "boolean",
-                                        "description": "내레이터 여부"
-                                    },
-                                    "message": {
-                                        "type": "string",
-                                        "description": "캐릭터의 메시지"
-                                    }
-                                },
-                                "required": ["name", "is_main_character", "is_storyteller", "message"]
-                            }
-                        },
-                        "summary": {
-                            "type": "string",
-                            "description": "대화 요약"
-                        }
-                    },
-                    "required": ["messages", "summary"]
-                }
-            }
-        }
-
 class OpenRouterRequest(AIRequest):
     def __init__(self, model: str):
         self.api_key = os.getenv("OPENROUTER_API_KEY")
@@ -113,7 +56,7 @@ class OpenRouterRequest(AIRequest):
                     messages=formatted_messages,
                     model="google/gemini-2.0-flash-001",
                     temperature=temperature,
-                    response_format=AIResponse.json_schema()
+                    response_format=CharacterJsonResponse.json_schema()
                 )
                 content = response.choices[0].message.content
                 logger.info(f"OpenRouter API 응답 원본: {content}")
@@ -147,7 +90,7 @@ class OpenAIRequest(AIRequest):
                     messages=formatted_messages,
                     model= "gpt-4o-mini",
                     temperature=temperature,
-                    response_format=AIResponse
+                    response_format=CharacterJsonResponse
                 )
             logger.info(f"OpenAI API 원본 응답: {assistant_message}")
             return {"message": assistant_message.choices[0].message.content}
@@ -207,7 +150,7 @@ class GeminiRequest(AIRequest):
                 config=types.GenerateContentConfig(
                     system_instruction=system_prompt,
                     response_mime_type= "application/json",
-                    response_schema= AIResponse,
+                    response_schema= CharacterJsonResponse,
                     max_output_tokens=8192 * 2,
                     temperature=temperature
                 )
