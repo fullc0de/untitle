@@ -50,7 +50,7 @@ def request_bot_msg_task(chatroom_id: int, temperature=0.7) -> MsgInfo:
                 session.commit()
 
                 # web 서버로 메시지 전송 (web 서버가 클라이언트에게 전달함)
-                #redis_client.publish("chat_messages", json.dumps({"chatroom_id": chatroom_id, "sender_id": bot.id, "message": message.text}))
+                redis_client.publish("chat_messages", json.dumps({"chatroom_id": chatroom_id, "sender_id": bot.id, "message": message.text}))
 
                 return MsgInfo(msg=ai_msg, msg_id=message.id)
         except Exception as e:
