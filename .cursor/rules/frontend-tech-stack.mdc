@@ -1,0 +1,13 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+
+프론트앤드 환경은 FastAPI 서버와는 독립된 프로세스로 동작하도록 구성한다.
+프론트앤드 관련 설정 및 소스코드는 모두 루트디렉토리에 있는 frontend 디렉토리 안에 배치한다.
+
+## 사용 스택 ##
+- Next.js App Router 기반
+- SPA CSR로 모든 페이지를 브라우저 측에서 동적으로 구현한다.
+- CSS 모듈은 Tailwind를 사용합니다.
