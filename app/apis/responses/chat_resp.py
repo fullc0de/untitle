@@ -4,10 +4,6 @@ from pydantic import BaseModel
 from app.apis.responses.bot_resp import BotResp
 from app.models import Chatroom, Chat
 from app.apis.enum import SenderType
-import logging
-
-logger = logging.getLogger(__name__)
-
 
 class ChatResp(BaseModel):
     id: int

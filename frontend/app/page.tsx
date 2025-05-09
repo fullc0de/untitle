@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { io } from 'socket.io-client';
 import { getCurrentUser } from './api/auth';
 import { createChatroom, getChatrooms, getChats, sendChat, Chat } from './api/chat';
 
@@ -27,6 +28,36 @@ export default function Home() {
 
     checkAuth();
   }, []);
+
+  // 웹소켓 연결 설정
+  useEffect(() => {
+    if (!isAuthenticated || !chatroomId) return;
+
+    const socket = io(process.env.NEXT_PUBLIC_WEBSOCKET_URL || 'ws://localhost:8000', {
+      path: '/socket.io',
+      transports: ['websocket'],
+    });
+
+    socket.on('connect', () => {
+      console.log('웹소켓 연결됨');
+    });
+
+    socket.on('message', (data) => {
+      console.log('수신된 데이터:', data);
+      // // data가 이미 JSON 객체인 경우 파싱하지 않음
+      // const chatData = typeof data.data === 'string' ? JSON.parse(data.data) : data.data;
+      // console.log('파싱된 메시지:', chatData);
+      setMessages(prevMessages => [...prevMessages, data]);
+    });
+
+    socket.on('disconnect', () => {
+      console.log('웹소켓 연결 해제됨');
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [isAuthenticated, chatroomId]);
 
   const initializeChatroom = async () => {
     try {

@@ -29,7 +29,7 @@ async def disconnect(sid):
 async def send_message_to_client(message: str):
     global connected_id
     if connected_id:
-        await sio.emit('message', {'data': message}, room=connected_id)
+        await sio.emit('message', "{\"text\": \"hello world\"}", room=connected_id)
         logger.info(f"메시지 전송됨: {message}")
     else:
         logger.warning("연결된 클라이언트가 없습니다.") 

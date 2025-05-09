@@ -3,10 +3,6 @@ from typing import Optional
 from pydantic import BaseModel
 from app.apis.responses.bot_resp import BotResp
 from app.models.chatroom import Chatroom
-import logging
-
-logger = logging.getLogger(__name__)
-
 
 class ChatroomResp(BaseModel):
     id: int
@@ -19,7 +15,6 @@ class ChatroomResp(BaseModel):
 
     @classmethod
     def from_orm(cls, chatroom: Chatroom) -> "ChatroomResp":
-        logger.info(f"chatroom init")
         return cls(
             id=chatroom.id,
             title=chatroom.title,

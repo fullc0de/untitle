@@ -30,6 +30,7 @@ services:
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
       - MONGODB_URL=mongodb://user:password@mongodb:27017/vector_db
+      - ALLOWED_ORIGINS=http://localhost:3000,http://localhost:8000
     depends_on:
       - db
 

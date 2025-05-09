@@ -48,9 +48,14 @@ def request_bot_msg_task(chatroom_id: int, temperature=0.7) -> MsgInfo:
                 }
                 message = chat_repository.create_chat(content, chatroom_id, bot.id, SenderType.bot)
                 session.commit()
-
+                session.refresh(message)
+                
+                # 메시지를 딕셔너리로 변환 후 JSON 직렬화
+                message_json = message.model_dump_json()
+                logger.info(f"serialized message: {message_json}")
+                
                 # web 서버로 메시지 전송 (web 서버가 클라이언트에게 전달함)
-                redis_client.publish("chat_messages", json.dumps({"chatroom_id": chatroom_id, "sender_id": bot.id, "message": message.text}))
+                redis_client.publish("chat_messages", message_json)
 
                 return MsgInfo(msg=ai_msg, msg_id=message.id)
         except Exception as e:
