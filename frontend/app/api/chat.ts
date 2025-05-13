@@ -18,7 +18,7 @@ export interface Chatroom {
 
 export interface Chat {
   id: number;
-  content: Record<string, any>;
+  content: Record<string, any> | null;
   chatroom_id: number;
   sender_id: number;
   sender_type: 'user' | 'bot';

@@ -113,6 +113,25 @@ export default function Home() {
     }
   };
 
+  const extractTextMessage = (message: Chat) => {
+    if (!message.content) return '';
+    
+    if (message.sender_type === 'user') {
+      return message.content.text;
+    } else if (message.sender_type === 'bot') {
+      try {
+        const parsedText = typeof message.content.text === 'string' 
+          ? JSON.parse(message.content.text)
+          : message.content.text;
+        return parsedText.message;
+      } catch (error) {
+        console.error('메시지 파싱 에러:', error);
+        return '메시지를 파싱할 수 없습니다.';
+      }
+    }
+    return '';
+  };
+
   if (!isAuthenticated) {
     return (
       <main className="flex min-h-screen flex-col items-center justify-center p-24">
@@ -163,7 +182,7 @@ export default function Home() {
                     : 'bg-base-200'
                 }`}
               >
-                {message.content.text}
+                {extractTextMessage(message)}
               </div>
             </div>
           ))}
