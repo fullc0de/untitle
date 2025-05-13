@@ -45,9 +45,9 @@ export default function Home() {
     socket.on('message', (data) => {
       console.log('수신된 데이터:', data);
       // // data가 이미 JSON 객체인 경우 파싱하지 않음
-      // const chatData = typeof data.data === 'string' ? JSON.parse(data.data) : data.data;
+      const chatData = typeof data === 'string' ? JSON.parse(data) : data;
       // console.log('파싱된 메시지:', chatData);
-      setMessages(prevMessages => [...prevMessages, data]);
+      setMessages(prevMessages => [...prevMessages, chatData]);
     });
 
     socket.on('disconnect', () => {
