@@ -36,7 +36,8 @@ async def lifespan(app: FastAPI):
                 message = await pubsub.get_message(ignore_subscribe_messages=True)
                 if message and message["type"] == "message":
                     logger.info(f"listener message: {message}")
-                    await send_message_to_client(message)
+                    data = json.loads(message["data"])
+                    await send_message_to_client(data)
             except Exception as e:
                 logger.error(f"Redis 구독 오류: {str(e)}")
                 await asyncio.sleep(1)

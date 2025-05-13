@@ -36,17 +36,12 @@ async def disconnect(sid):
     connected_id = None
     logger.info(f"클라이언트 연결 해제됨: {sid}")
 
-async def send_message_to_client(message):
+async def send_message_to_client(data):
     global connected_id
     if connected_id:
         try:
-            # bytes 데이터를 UTF-8 문자열로 디코딩
-            if isinstance(message['data'], bytes):
-                message_str = message['data'].decode('utf-8')
-            else:
-                message_str = message['data']
-            await sio.emit('message', message_str, room=connected_id)
-            logger.info(f"메시지 전송됨: {message_str}")
+            await sio.emit('message', data, room=connected_id)
+            logger.info(f"메시지 전송됨: {data}")
         except Exception as e:
             logger.error(f"메시지 전송 중 오류 발생: {str(e)}")
     else:
