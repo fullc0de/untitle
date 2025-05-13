@@ -5,7 +5,7 @@ from app.services.enum import SenderType
 from app.repositories.chat_repository import ChatRepository
 from app.services.transaction_service import TransactionService
 from app.models import Chatroom, Chat, Bot
-from typing import List, Tuple, Optional
+from typing import List
 from app.tasks.request_bot_msg_task import request_bot_msg_task
 import logging
 
@@ -56,7 +56,7 @@ class ChatService(TransactionService):
             }
         msg = self.chat_repository.create_chat(content, chatroom_id, sender_id, sender_type)
         self.session.commit()
-        request_bot_msg_task.delay(chatroom_id, 1.0)
+        request_bot_msg_task.delay(chatroom_id, 1.5)
         return msg
 
     # def create_message(self, text: str, chatroom_id: int, sender_id: int, sender_type: AttendeeType) -> Message:

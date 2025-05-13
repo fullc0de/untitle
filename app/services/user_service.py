@@ -1,10 +1,7 @@
 from sqlmodel import Session
 from app.repositories.user_repository import UserRepository
 from app.services.transaction_service import TransactionService
-from app.models import Bot, User
-from app.services import enum
-from typing import List, Tuple, Optional
-from app.tasks.request_bot_msg_task import request_bot_msg_task
+from app.models import User
 import logging
 from dotenv import load_dotenv
 

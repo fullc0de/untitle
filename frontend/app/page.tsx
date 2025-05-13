@@ -45,9 +45,9 @@ export default function Home() {
     socket.on('message', (data) => {
       console.log('수신된 데이터:', data);
       // // data가 이미 JSON 객체인 경우 파싱하지 않음
-      const chatData = typeof data === 'string' ? JSON.parse(data) : data;
+      //const chatData = typeof data === 'string' ? JSON.parse(data) : data;
       // console.log('파싱된 메시지:', chatData);
-      setMessages(prevMessages => [...prevMessages, chatData]);
+      setMessages(prevMessages => [...prevMessages, data]);
     });
 
     socket.on('disconnect', () => {
@@ -113,23 +113,9 @@ export default function Home() {
     }
   };
 
-  const extractTextMessage = (message: Chat) => {
+  const buildFormattedMessage = (message: Chat) => {
     if (!message.content) return '';
-    
-    if (message.sender_type === 'user') {
-      return message.content.text;
-    } else if (message.sender_type === 'bot') {
-      try {
-        const parsedText = typeof message.content.text === 'string' 
-          ? JSON.parse(message.content.text)
-          : message.content.text;
-        return parsedText.message;
-      } catch (error) {
-        console.error('메시지 파싱 에러:', error);
-        return '메시지를 파싱할 수 없습니다.';
-      }
-    }
-    return '';
+    return message.content.text;
   };
 
   if (!isAuthenticated) {
@@ -182,7 +168,7 @@ export default function Home() {
                     : 'bg-base-200'
                 }`}
               >
-                {extractTextMessage(message)}
+                {buildFormattedMessage(message)}
               </div>
             </div>
           ))}

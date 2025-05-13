@@ -13,6 +13,7 @@ from app.apis.users import router as users_router
 from app.apis.bots import router as bots_router
 from app.utils.websocket import socket_app, send_message_to_client
 from app.admin.admin_setting import setup_admin
+from app.apis.responses.chat_resp import ChatResp
 import redis.asyncio as redis
 import logging
 

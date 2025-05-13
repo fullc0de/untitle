@@ -16,9 +16,12 @@ class ChatResp(BaseModel):
 
     @classmethod
     def from_orm(cls, chat: Chat) -> "ChatResp":
+        filtered_content = chat.content.copy()
+        if "original_response" in filtered_content:
+            del filtered_content["original_response"]
         return cls(
             id=chat.id,
-            content=chat.content,
+            content=filtered_content,
             chatroom_id=chat.chatroom_id,
             sender_id=chat.sender_id,
             sender_type=chat.sender_type,

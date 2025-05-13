@@ -144,8 +144,8 @@ class GeminiRequest(AIRequest):
             logger.info(f"Gemini API 요청: formatted_messages: {formatted_messages}")
             client = genai.Client(api_key=self.api_key)
             assistant_message = await client.aio.models.generate_content(
-                model= "gemini-2.0-flash",
-                #model= "gemini-2.5-pro-exp-03-25",
+                #model= "gemini-2.0-flash",
+                model= "gemini-2.5-flash-preview-04-17",
                 contents=formatted_messages,
                 config=types.GenerateContentConfig(
                     system_instruction=system_prompt,
@@ -158,8 +158,8 @@ class GeminiRequest(AIRequest):
             logger.info(f"Gemini API 원본 응답: {assistant_message}")
 
             token_count = await client.aio.models.count_tokens(
-                model="gemini-2.0-flash",
-                #model="gemini-2.5-pro-exp-03-25",
+                #model="gemini-2.0-flash",
+                model="gemini-2.5-flash-preview-04-17",
                 contents=[
                     types.Content(
                         role="system",

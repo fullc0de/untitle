@@ -38,13 +38,15 @@ def request_bot_msg_task(chatroom_id: int, temperature=0.7) -> MsgInfo:
                 prompt_context.prompt_template = prompts.prompt_unknown_template_2
                 logger.info(f"prompt: {prompt_context.prompt_template}")
 
-                ai_model = "openrouter"
+                ai_model = "gemini"
 
                 ai_request = ThirdPartyAIRequest(prompt_context)
                 ai_msg = await ai_request.chat(recent_messages, ai_model, temperature)
                 logger.info(f"Bot 메시지: {ai_msg}")
+                json_msg = json.loads(ai_msg)
                 content = {
-                    "text": ai_msg
+                    "text": json_msg["message"],
+                    "original_response": json_msg
                 }
                 message = chat_repository.create_chat(content, chatroom_id, bot.id, SenderType.bot)
                 session.commit()
@@ -55,6 +57,9 @@ def request_bot_msg_task(chatroom_id: int, temperature=0.7) -> MsgInfo:
                 logger.info(f"serialized message: {message_json}")
                 
                 # web 서버로 메시지 전송 (web 서버가 클라이언트에게 전달함)
+                message_dict = json.loads(message_json)
+                message_dict['content']['original_response'] = None
+                message_json = json.dumps(message_dict)
                 redis_client.publish("chat_messages", message_json)
 
                 return MsgInfo(msg=ai_msg, msg_id=message.id)
