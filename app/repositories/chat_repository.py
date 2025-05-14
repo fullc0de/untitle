@@ -42,7 +42,7 @@ class ChatRepository:
 
     ## chat
     def get_all_messages(self, chatroom_id: int) -> List[Chat]:
-        messages = self.session.exec(select(Chat).where(Chat.chatroom_id == chatroom_id)).all()
+        messages = self.session.exec(select(Chat).where(Chat.chatroom_id == chatroom_id).order_by(Chat.created_at.asc())).all()
         return messages
     
     def create_chat(self, content: dict, chatroom_id: int, sender_id: int, sender_type: SenderType) -> Chat:
