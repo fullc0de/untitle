@@ -151,28 +151,30 @@ class GeminiRequest(AIRequest):
                     system_instruction=system_prompt,
                     response_mime_type= "application/json",
                     response_schema= CharacterJsonResponse,
-                    max_output_tokens=8192 * 2,
+                    max_output_tokens=4092,
                     temperature=temperature
                 )
             )
             logger.info(f"Gemini API 원본 응답: {assistant_message}")
 
-            token_count = await client.aio.models.count_tokens(
-                #model="gemini-2.0-flash",
-                model="gemini-2.5-flash-preview-04-17",
-                contents=[
-                    types.Content(
-                        role="system",
-                        parts=[types.Part.from_text(text=system_prompt)]
-                    ),
-                    *formatted_messages,
-                    types.Content(
-                        role="model",
-                        parts=[types.Part.from_text(text=assistant_message.text)]
-                    )
-                ]
-            )
-            logger.info(f"토큰 수: {token_count}")
+            # token_count = await client.aio.models.count_tokens(
+            #     #model="gemini-2.0-flash",
+            #     model="gemini-2.5-flash-preview-04-17",
+            #     contents=[
+            #         types.Content(
+            #             role="system",
+            #             parts=[types.Part.from_text(text=system_prompt)]
+            #         ),
+            #         *formatted_messages,
+            #         types.Content(
+            #             role="model",
+            #             parts=[types.Part.from_text(text=assistant_message.text)]
+            #         )
+            #     ]
+            # )
+            logger.info(f"프롬프트 토큰 수: {assistant_message.usage_metadata.prompt_token_count}")
+            logger.info(f"Output 토큰 수: {assistant_message.usage_metadata.candidates_token_count}")
+            logger.info(f"총 토큰 수: {assistant_message.usage_metadata.total_token_count}")
 
             return {"message": assistant_message.text}
         except Exception as e:

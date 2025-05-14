@@ -13,6 +13,7 @@ export default function Home() {
   const [newMessage, setNewMessage] = useState('');
   const [chatroomId, setChatroomId] = useState<number | null>(null);
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
@@ -61,11 +62,10 @@ export default function Home() {
 
   const initializeChatroom = async () => {
     try {
-      // 기존 채팅방 목록 조회
+      setIsLoading(true);
       const chatrooms = await getChatrooms();
       
       if (chatrooms.length > 0) {
-        // 가장 최근에 생성된 채팅방 선택
         const latestChatroom = chatrooms.reduce((latest, current) => {
           return new Date(current.created_at) > new Date(latest.created_at)
             ? current
@@ -74,14 +74,24 @@ export default function Home() {
         
         setChatroomId(latestChatroom.id);
         loadMessages(latestChatroom.id);
-      } else {
-        // 채팅방이 없는 경우 새로 생성
-        const chatroom = await createChatroom();
-        setChatroomId(chatroom.id);
-        loadMessages(chatroom.id);
       }
     } catch (error) {
       setError('채팅방 초기화에 실패했습니다.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCreateChatroom = async () => {
+    try {
+      setIsLoading(true);
+      const chatroom = await createChatroom();
+      setChatroomId(chatroom.id);
+      loadMessages(chatroom.id);
+    } catch (error) {
+      setError('채팅방 생성에 실패했습니다.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -132,6 +142,34 @@ export default function Home() {
                 Sign In
               </Link>
             </div>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <main className="flex min-h-screen flex-col items-center justify-center">
+        <div className="loading loading-spinner loading-lg"></div>
+      </main>
+    );
+  }
+
+  if (!chatroomId) {
+    return (
+      <main className="flex min-h-screen flex-col items-center justify-center p-24">
+        <div className="card w-96 bg-base-100 shadow-xl">
+          <div className="card-body items-center text-center">
+            <h1 className="card-title text-2xl font-bold mb-4">새로운 대화 시작하기</h1>
+            <p className="mb-6">새로운 대화방을 만들어보세요</p>
+            <button 
+              onClick={handleCreateChatroom} 
+              className="btn btn-primary btn-lg"
+              disabled={isLoading}
+            >
+              대화방 만들기
+            </button>
           </div>
         </div>
       </main>
