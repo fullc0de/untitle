@@ -56,7 +56,7 @@ class OpenRouterRequest(AIRequest):
                     messages=formatted_messages,
                     model="google/gemini-2.0-flash-001",
                     temperature=temperature,
-                    response_format=CharacterJsonResponse.json_schema()
+                    response_format=CharacterJsonResponse.json_schema(),
                 )
                 content = response.choices[0].message.content
                 logger.info(f"OpenRouter API 응답 원본: {content}")

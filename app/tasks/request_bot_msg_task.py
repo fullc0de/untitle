@@ -30,7 +30,7 @@ def request_bot_msg_task(chatroom_id: int, temperature=0.7) -> MsgInfo:
             with Session(engine) as session:
                 chat_repository = ChatRepository(session)
 
-                bot = chat_repository.get_bot_by_chatroom_id(chatroom_id)
+                chatroom = chat_repository.get_chatroom_by_id(chatroom_id)
                 recent_messages = chat_repository.get_latest_messages(chatroom_id, 10)
                 logger.info(f"recent_messages: {recent_messages.reverse()}")
 
@@ -48,7 +48,7 @@ def request_bot_msg_task(chatroom_id: int, temperature=0.7) -> MsgInfo:
                     "text": json_msg["message"],
                     "original_response": json_msg
                 }
-                message = chat_repository.create_chat(content, chatroom_id, bot.id, SenderType.bot)
+                message = chat_repository.create_chat(content, chatroom_id, chatroom.bot.id, SenderType.bot)
                 session.commit()
                 session.refresh(message)
                 
@@ -61,6 +61,15 @@ def request_bot_msg_task(chatroom_id: int, temperature=0.7) -> MsgInfo:
                 message_dict['content']['original_response'] = None
                 message_json = json.dumps(message_dict)
                 redis_client.publish("chat_messages", message_json)
+                
+                # # 업데이트 facts
+                # facts = message.content['original_response']['character_facts']
+                # prompt_modifier = chatroom.get_prompt_modifier()
+                # if facts['newly_discovered_facts'] != None:
+                #     prompt_modifier.facts.append(facts['newly_discovered_facts'])
+                # chatroom.set_prompt_modifier(prompt_modifier)
+                # session.commit()
+                # session.refresh(chatroom)
 
                 return MsgInfo(msg=ai_msg, msg_id=message.id)
         except Exception as e:

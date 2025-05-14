@@ -1,6 +1,6 @@
 from typing import List
 from sqlmodel import Session, select
-from app.models import Chatroom, Bot, Chat
+from app.models import Chatroom, Bot, Chat, ChatroomPromptModifier
 from app.models.chat import SenderType
 import logging
 
@@ -12,6 +12,7 @@ class ChatRepository:
 
     def create_chatroom(self, me_id: int) -> Chatroom:
         chatroom = Chatroom(owner_id=me_id)
+        chatroom.set_prompt_modifier(ChatroomPromptModifier())
         self.session.add(chatroom)
         self.session.flush()
         return chatroom
