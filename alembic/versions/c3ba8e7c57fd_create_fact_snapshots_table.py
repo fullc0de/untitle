@@ -28,7 +28,6 @@ def upgrade() -> None:
         sa.Column('conversation_summary', sa.String(), nullable=True),
         sa.Column('created_at', sa.DateTime(), nullable=False, index=True),
         sa.Column('updated_at', sa.DateTime(), nullable=False),
-        sa.ForeignKeyConstraint(['chatroom_id'], ['chatrooms.id'], ondelete='CASCADE'),
         sa.PrimaryKeyConstraint('id')
     )
 
