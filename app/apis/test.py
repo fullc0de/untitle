@@ -1,12 +1,7 @@
-from fastapi import APIRouter, HTTPException, Depends, Form
+from fastapi import APIRouter
 from pydantic import BaseModel
-from sqlmodel import Session
-from app.database import get_session
-from app.repositories.auth_repository import AuthRepository
+from app.requests.prompt_context import PromptContext
 from app.requests.thirdparty_ai_request import ThirdPartyAIRequest
-from app.services.auth_service import AuthService
-from app.apis.responses.signup_resp import SignUpResponse
-from app.apis.responses.signin_resp import SignInResponse
 import logging
 
 router = APIRouter()
@@ -25,10 +20,11 @@ class TestAICompletionResponse(BaseModel):
 async def ai_summary(
     test_ai_completion_param: TestAICompletionParam
 ):
-    ai_request = ThirdPartyAIRequest(test_ai_completion_param)
+    prompt_context = PromptContext()
+    prompt_context.summary_prompt_template = test_ai_completion_param.system_prompt
+    ai_request = ThirdPartyAIRequest(prompt_context)
     result = await ai_request.summary(
         test_ai_completion_param.ai_model,
-        test_ai_completion_param.system_prompt,
         test_ai_completion_param.request,
         test_ai_completion_param.temperature
     )

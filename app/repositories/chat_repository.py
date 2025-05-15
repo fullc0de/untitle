@@ -1,6 +1,6 @@
 from typing import List
 from sqlmodel import Session, select
-from app.models import Chatroom, Bot, Chat, ChatroomPromptModifier
+from app.models import Chatroom, Bot, Chat, ChatroomPromptModifier, FactSnapshot
 from app.models.chat import SenderType
 import logging
 
@@ -60,3 +60,14 @@ class ChatRepository:
             .limit(limit)
         ).all()
         return messages
+
+    ## snapshot
+    def create_fact_snapshot(self, chatroom_id: int, chat_id: int, character_info: dict, summary: str) -> FactSnapshot:
+        fact_snapshot = FactSnapshot(chatroom_id=chatroom_id, chat_id=chat_id, character_info=character_info, conversation_summary=summary)
+        self.session.add(fact_snapshot)
+        self.session.flush()
+        return fact_snapshot
+    
+    def get_latest_fact_snapshot(self, chatroom_id: int) -> FactSnapshot:
+        fact_snapshot = self.session.exec(select(FactSnapshot).where(FactSnapshot.chatroom_id == chatroom_id).order_by(FactSnapshot.created_at.desc())).first()
+        return fact_snapshot

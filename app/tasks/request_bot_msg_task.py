@@ -31,12 +31,17 @@ def request_bot_msg_task(chatroom_id: int, temperature=0.7) -> MsgInfo:
                 chat_repository = ChatRepository(session)
 
                 chatroom = chat_repository.get_chatroom_by_id(chatroom_id)
-                recent_messages = chat_repository.get_latest_messages(chatroom_id, 10)
+                recent_messages = chat_repository.get_latest_messages(chatroom_id, 5)
                 logger.info(f"recent_messages: {recent_messages.reverse()}")
 
+                latest_fact_snapshot = chat_repository.get_latest_fact_snapshot(chatroom_id)
+
                 prompt_context = PromptContext()
-                prompt_context.prompt_template = prompts.prompt_unknown_template_2
-                logger.info(f"prompt: {prompt_context.prompt_template}")
+                prompt_context.chat_prompt_template = prompts.prompt_unknown_template_2
+                prompt_context.summary_prompt_template = prompts.prompt_template_summary
+                prompt_context.build(latest_fact_snapshot)
+                logger.info(f"chat_prompt_template: {prompt_context.chat_prompt_template}")
+                logger.info(f"summary_prompt_template: {prompt_context.summary_prompt_template}")
 
                 ai_model = "gemini"
 
@@ -52,6 +57,16 @@ def request_bot_msg_task(chatroom_id: int, temperature=0.7) -> MsgInfo:
                 session.commit()
                 session.refresh(message)
                 
+                # 새로운 fact_snapshot 생성
+                new_fact = json_msg["character_facts"].get("newly_established_fact_on_character")
+                if new_fact:
+                    summary_response = await ai_request.summary(ai_model, new_fact, 0.5)
+                    summary_dict = json.loads(summary_response)
+                    logger.info(f"summary: {summary_dict}")
+                    chat_repository.create_fact_snapshot(chatroom_id, message.id, summary_dict["chatbot_info"], summary_dict["facts_summary"])
+                    session.commit()
+                    session.refresh(message)
+
                 # 메시지를 딕셔너리로 변환 후 JSON 직렬화
                 message_json = message.model_dump_json()
                 logger.info(f"serialized message: {message_json}")

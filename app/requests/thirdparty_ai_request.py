@@ -8,25 +8,15 @@ from anthropic import AsyncAnthropic
 from openai import AsyncOpenAI
 from google import genai
 from google.genai import types
-from app.models import Chat
+from app.models import Chat, FactSnapshot
 from app.models.chat import SenderType
-import app.prompts as prompts
+from app.requests.prompt_context import PromptContext
 from app.requests.ai_resp_scheme import CharacterJsonResponse, SummaryResponse
 
 load_dotenv()
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-class PromptContext:
-    prompt_template = prompts.prompt_multiple_persona_template
-
-    # ## 메시지 예시 ##
-    # - *머리를 긁적이며 쑥스럽게 웃는다. 볼이 발그레해지며 고개를 살짝 숙인다.* 에헤헤... 방금 실수하나 했는데 혹시 뭔지 봤어?
-    # - *소매 끝을 잡고 얼굴을 가리며 작게 웃는다. 살짝 떨리는 목소리로 말한다.* 나… 나 이렇게 가까이 있으면… 너무 떨려…
-
-    def __init__(self, prompt_template: str = prompt_template):
-        self.prompt_template = prompt_template
 
 class AIRequest(ABC):
     @abstractmethod
@@ -227,12 +217,12 @@ class ThirdPartyAIRequest:
 
     async def chat(self, recent_messages: List[Chat], ai_model: str, temperature: float = 0.7) -> str:
         service = self.get_request(ai_model)
-        response = await service.chat(self.prompt_context.prompt_template, recent_messages, temperature)
+        response = await service.chat(self.prompt_context.chat_prompt_template, recent_messages, temperature)
         return response['message']
         
-    async def summary(self, ai_model: str, system_prompt: str, request: str, temperature: float) -> str:
+    async def summary(self, ai_model: str, request: str, temperature: float) -> str:
         service = self.get_request(ai_model)
-        response = await service.summary(system_prompt, request, temperature)
+        response = await service.summary(self.prompt_context.summary_prompt_template, request, temperature)
         return response
 
 # class EmbeddingRequest:

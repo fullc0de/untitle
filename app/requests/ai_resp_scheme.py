@@ -9,7 +9,7 @@ class CharacterFacts(BaseModel):
     relationship: Optional[str] = None
     interests: Optional[str] = None
     expertise: Optional[str] = None
-    newly_defined_fact: Optional[str] = None
+    newly_established_fact_on_character: Optional[str] = None
 
 class CharacterJsonResponse(BaseModel):
     message: str
@@ -34,31 +34,31 @@ class CharacterJsonResponse(BaseModel):
                             "properties": {
                                 "name": {
                                     "type": "string",
-                                    "description": "캐릭터 이름"
+                                    "description": "당신의 이름"
                                 },
                                 "gender": {
                                     "type": "string",
-                                    "description": "캐릭터의 성별"
+                                    "description": "당신의 성별"
                                 },
                                 "relationship": {
                                     "type": "string",
-                                    "description": "유저에 대한 캐릭터의 현재 관계"
+                                    "description": "유저와 당신의 현재 관계"
                                 },
                                 "interests": {
                                     "type": "string",
-                                    "description": "캐릭터의 관심사"
+                                    "description": "당신의 관심사 (취미, 기호)"
                                 },
                                 "expertise": {
                                     "type": "string",
-                                    "description": "캐릭터의 전문 분야"
+                                    "description": "당신의 전문 분야 (직업, 특기, 지식)"
                                 },
                                 "current_emotion": {
                                     "type": "string",
-                                    "description": "현재 캐릭터가 느끼는 감정"
+                                    "description": "현재 당신이 느끼는 감정"
                                 },
-                                "newly_defined_fact": {
+                                "newly_established_fact_on_character": {
                                     "type": "string",
-                                    "description": "최근 대화를 통해 유저가 캐릭터에게 부여한 정의"
+                                    "description": "새롭게 (합의, 정의, 부여)된 당신과 관련한 사실이나 정보"
                                 }
                             },
                             "required": ["current_emotion"]
@@ -77,7 +77,7 @@ class CharacterResponse(BaseModel):
     is_storyteller: bool
     message: str
 
-class CharacterInfo(BaseModel):
+class ChatbotInfo(BaseModel):
     name: Optional[str] = None
     gender: Optional[str] = None
     relationship: Optional[str] = None
@@ -91,19 +91,19 @@ class CharacterInfo(BaseModel):
             "items": {
                 "type": "object",
                 "properties": {
-                    "name": {"type": "string", "description": "캐릭터 이름"},
-                    "gender": {"type": "string", "description": "캐릭터 성별"},
-                    "relationship": {"type": "string", "description": "캐릭터와 유저의 관계"},
-                    "interest_keywords": {"type": "array", "items": {"type": "string"}, "description": "캐릭터의 관심 분야 (키워드)"},
-                    "expertise_keywords": {"type": "array", "items": {"type": "string"}, "description": "캐릭터의 전문 분야 (키워드)"}
+                    "name": {"type": "string", "description": "챗봇 이름"},
+                    "gender": {"type": "string", "description": "챗봇 성별"},
+                    "relationship": {"type": "string", "description": "챗봇과 유저의 관계"},
+                    "interest_keywords": {"type": "array", "items": {"type": "string"}, "description": "챗봇의 관심 분야 (키워드)"},
+                    "expertise_keywords": {"type": "array", "items": {"type": "string"}, "description": "챗봇의 전문 분야 (키워드)"}
                 },
                 "required": ["name", "gender", "relationship", "interest_keywords", "expertise_keywords"]
             }
         }
                 
 class SummaryResponse(BaseModel):
-    summary: str
-    character_info: CharacterInfo
+    facts_summary: str
+    chatbot_info: ChatbotInfo
 
     @classmethod
     def json_schema(cls) -> Dict[str, Any]:
@@ -115,10 +115,10 @@ class SummaryResponse(BaseModel):
                 "schema": {
                     "type": "object",
                     "properties": {
-                        "summary": {"type": "string"},
-                        "character_info": CharacterInfo.json_schema()
+                        "facts_summary": {"type": "string"},
+                        "chatbot_info": ChatbotInfo.json_schema()
                     },
-                    "required": ["summary", "character_info"]
+                    "required": ["facts_summary", "chatbot_info"]
                 }
             }
         }
