@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+import json
 import os
 from dotenv import load_dotenv
 from typing import Dict, List, Any
@@ -10,7 +11,7 @@ from google.genai import types
 from app.models import Chat
 from app.models.chat import SenderType
 import app.prompts as prompts
-from app.requests.ai_resp_scheme import CharacterJsonResponse
+from app.requests.ai_resp_scheme import CharacterJsonResponse, SummaryResponse
 
 load_dotenv()
 
@@ -31,10 +32,15 @@ class AIRequest(ABC):
     @abstractmethod
     async def chat(self, system_prompt: str, messages: List[Chat], temperature: float) -> Dict[str, Any]:
         pass
+    
+    @abstractmethod
+    async def summary(self, system_prompt: str, request: str, temperature: float) -> Dict[str, Any]:
+        pass
 
     @abstractmethod
     def agent_role(self, is_bot: bool) -> str:
         pass
+
 class OpenRouterRequest(AIRequest):
     def __init__(self, model: str):
         self.api_key = os.getenv("OPENROUTER_API_KEY")
@@ -67,6 +73,9 @@ class OpenRouterRequest(AIRequest):
             logger.error(f"OpenRouter API 오류: {str(e)}")
             raise Exception(f"OpenRouter API 오류: {str(e)}")
 
+    async def summary(self, system_prompt: str, request: str, temperature: float) -> Dict[str, Any]:
+        raise NotImplementedError("OpenRouter API는 summary 기능을 지원하지 않습니다.")
+
     def agent_role(self, is_bot: bool) -> str:
         return "assistant" if is_bot else "user"
     
@@ -98,6 +107,9 @@ class OpenAIRequest(AIRequest):
             logger.error(f"OpenAI API 오류: {str(e)}")
             raise Exception(f"OpenAI API 오류: {str(e)}")
 
+    async def summary(self, system_prompt: str, request: str, temperature: float) -> Dict[str, Any]:
+        raise NotImplementedError("OpenAI API는 summary 기능을 지원하지 않습니다.")
+
     def agent_role(self, is_bot: bool) -> str:
         return "assistant" if is_bot else "user"
 
@@ -126,6 +138,9 @@ class ClaudeRequest(AIRequest):
             logger.error(f"Claude API 오류: {str(e)}")
             raise Exception(f"Claude API 오류: {str(e)}")
         
+    async def summary(self, system_prompt: str, request: str, temperature: float) -> Dict[str, Any]:
+        raise NotImplementedError("Claude API는 summary 기능을 지원하지 않습니다.")
+
     def agent_role(self, is_bot: bool) -> str:
         return "assistant" if is_bot else "user"
 
@@ -156,22 +171,6 @@ class GeminiRequest(AIRequest):
                 )
             )
             logger.info(f"Gemini API 원본 응답: {assistant_message}")
-
-            # token_count = await client.aio.models.count_tokens(
-            #     #model="gemini-2.0-flash",
-            #     model="gemini-2.5-flash-preview-04-17",
-            #     contents=[
-            #         types.Content(
-            #             role="system",
-            #             parts=[types.Part.from_text(text=system_prompt)]
-            #         ),
-            #         *formatted_messages,
-            #         types.Content(
-            #             role="model",
-            #             parts=[types.Part.from_text(text=assistant_message.text)]
-            #         )
-            #     ]
-            # )
             logger.info(f"프롬프트 토큰 수: {assistant_message.usage_metadata.prompt_token_count}")
             logger.info(f"Output 토큰 수: {assistant_message.usage_metadata.candidates_token_count}")
             logger.info(f"총 토큰 수: {assistant_message.usage_metadata.total_token_count}")
@@ -181,6 +180,32 @@ class GeminiRequest(AIRequest):
             logger.error(f"Gemini API 오류: {str(e)}")
             raise Exception(f"Gemini API 오류: {str(e)}")
 
+    async def summary(self, system_prompt: str, request: str, temperature: float) -> Dict[str, Any]:
+        formatted_messages = [
+            types.Content(role="user", parts=[types.Part.from_text(text=request)])
+        ]
+        try:
+            logger.info(f"Gemini Completion API 요청: formatted_messages: {formatted_messages}")
+            client = genai.Client(api_key=self.api_key)
+            assistant_message = await client.aio.models.generate_content(
+                model= "gemini-2.5-flash-preview-04-17",
+                contents=formatted_messages,
+                    config=types.GenerateContentConfig(
+                        system_instruction=system_prompt,
+                        temperature=temperature,
+                        response_mime_type= "application/json",
+                        response_schema= SummaryResponse,
+                        thinking_config=types.ThinkingConfig(
+                            thinking_budget=0
+                        )
+                    )
+                )
+            logger.info(f"Gemini Completion API 원본 응답: {assistant_message}")
+            return assistant_message.text
+        except Exception as e:
+            logger.error(f"Gemini Completion API 오류: {str(e)}")
+            raise Exception(f"Gemini Completion API 오류: {str(e)}")
+
     def agent_role(self, is_bot: bool) -> str:
         return "model" if is_bot else "user"
     
@@ -188,22 +213,27 @@ class ThirdPartyAIRequest:
     def __init__(self, prompt_context: PromptContext):
         self.prompt_context = prompt_context
 
-    async def chat(self, recent_messages: List[Chat], ai_model: str, temperature: float = 0.7) -> str:
-        if "gpt" in ai_model:
-            service = OpenAIRequest(ai_model)
-        elif "claude" in ai_model:
-            service = ClaudeRequest(ai_model)
-        elif "gemini" in ai_model:
-            service = GeminiRequest(ai_model)
-        elif "openrouter" in ai_model:
-            service = OpenRouterRequest(ai_model)
+    def get_request(self, model: str) -> AIRequest:
+        if "gpt" in model:
+            return OpenAIRequest(model)
+        elif "claude" in model:
+            return ClaudeRequest(model)
+        elif "gemini" in model:
+            return GeminiRequest(model)
+        elif "openrouter" in model:
+            return OpenRouterRequest(model)
         else:
-            raise ValueError(f"지원하지 않는 AI 모델입니다: {ai_model}")
+            raise ValueError(f"지원하지 않는 AI 모델입니다: {model}")
 
+    async def chat(self, recent_messages: List[Chat], ai_model: str, temperature: float = 0.7) -> str:
+        service = self.get_request(ai_model)
         response = await service.chat(self.prompt_context.prompt_template, recent_messages, temperature)
-        
         return response['message']
         
+    async def summary(self, ai_model: str, system_prompt: str, request: str, temperature: float) -> str:
+        service = self.get_request(ai_model)
+        response = await service.summary(system_prompt, request, temperature)
+        return response
 
 # class EmbeddingRequest:
 #     def __init__(self, chat_repository: ChatRepository):

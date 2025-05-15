@@ -11,6 +11,7 @@ from app.apis.chats import router as chats_router
 from app.apis.auth import router as auth_router
 from app.apis.users import router as users_router
 from app.apis.bots import router as bots_router
+from app.apis.test import router as test_router
 from app.utils.websocket import socket_app, send_message_to_client
 from app.admin.admin_setting import setup_admin
 from app.apis.responses.chat_resp import ChatResp
@@ -78,3 +79,4 @@ app.include_router(chats_router)
 app.include_router(auth_router)
 app.include_router(users_router)
 app.include_router(bots_router)
+app.include_router(test_router)

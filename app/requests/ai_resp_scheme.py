@@ -77,6 +77,52 @@ class CharacterResponse(BaseModel):
     is_storyteller: bool
     message: str
 
+class CharacterInfo(BaseModel):
+    name: Optional[str] = None
+    gender: Optional[str] = None
+    relationship: Optional[str] = None
+    interest_keywords: Optional[List[str]] = None
+    expertise_keywords: Optional[List[str]] = None
+
+    @classmethod
+    def json_schema(cls) -> Dict[str, Any]:
+        return {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string", "description": "캐릭터 이름"},
+                    "gender": {"type": "string", "description": "캐릭터 성별"},
+                    "relationship": {"type": "string", "description": "캐릭터와 유저의 관계"},
+                    "interest_keywords": {"type": "array", "items": {"type": "string"}, "description": "캐릭터의 관심 분야 (키워드)"},
+                    "expertise_keywords": {"type": "array", "items": {"type": "string"}, "description": "캐릭터의 전문 분야 (키워드)"}
+                },
+                "required": ["name", "gender", "relationship", "interest_keywords", "expertise_keywords"]
+            }
+        }
+                
+class SummaryResponse(BaseModel):
+    summary: str
+    character_info: CharacterInfo
+
+    @classmethod
+    def json_schema(cls) -> Dict[str, Any]:
+        return {
+            "type": "json_schema",
+            "json_schema": {
+                "name": "summary_response",
+                "strict": True,
+                "schema": {
+                    "type": "object",
+                    "properties": {
+                        "summary": {"type": "string"},
+                        "character_info": CharacterInfo.json_schema()
+                    },
+                    "required": ["summary", "character_info"]
+                }
+            }
+        }
+    
 class AIResponse(BaseModel):
     messages: List[CharacterResponse]
     summary: str
