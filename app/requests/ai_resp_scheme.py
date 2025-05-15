@@ -9,7 +9,45 @@ class CharacterFacts(BaseModel):
     relationship: Optional[str] = None
     interests: Optional[str] = None
     expertise: Optional[str] = None
-    newly_established_fact_on_character: Optional[str] = None
+    newly_established_fact_on_both_user_and_character: Optional[str] = None
+
+    @classmethod
+    def json_schema(cls) -> Dict[str, Any]:
+        return {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "당신의 이름"
+                },
+                "gender": {
+                    "type": "string",
+                    "description": "당신의 성별"
+                },
+                "relationship": {
+                    "type": "string",
+                    "description": "유저와 당신의 현재 관계"
+                },
+                "interests": {
+                    "type": "string",
+                    "description": "당신의 관심사 (취미, 기호)"
+                },
+                "expertise": {
+                    "type": "string",
+                    "description": "당신의 전문 분야 (직업, 특기, 지식)"
+                },
+                "current_emotion": {
+                    "type": "string",
+                    "description": "현재 당신이 느끼는 감정"
+                },
+                "newly_established_fact_on_both_user_and_character": {
+                    "type": "string",
+                    "description": "당신과 유저 모두에 관련되어 새롭게 [합의, 정의, 부여, 발견]된 사실이나 정보"
+                }
+            },
+            "required": ["current_emotion"]
+        }
+    
 
 class CharacterJsonResponse(BaseModel):
     message: str
@@ -29,42 +67,9 @@ class CharacterJsonResponse(BaseModel):
                             "type": "string",
                             "description": "캐릭터가 생성한 응답 메시지"
                         },
-                        "character_facts": {
-                            "type": "object",
-                            "properties": {
-                                "name": {
-                                    "type": "string",
-                                    "description": "당신의 이름"
-                                },
-                                "gender": {
-                                    "type": "string",
-                                    "description": "당신의 성별"
-                                },
-                                "relationship": {
-                                    "type": "string",
-                                    "description": "유저와 당신의 현재 관계"
-                                },
-                                "interests": {
-                                    "type": "string",
-                                    "description": "당신의 관심사 (취미, 기호)"
-                                },
-                                "expertise": {
-                                    "type": "string",
-                                    "description": "당신의 전문 분야 (직업, 특기, 지식)"
-                                },
-                                "current_emotion": {
-                                    "type": "string",
-                                    "description": "현재 당신이 느끼는 감정"
-                                },
-                                "newly_established_fact_on_character": {
-                                    "type": "string",
-                                    "description": "새롭게 (합의, 정의, 부여)된 당신과 관련한 사실이나 정보"
-                                }
-                            },
-                            "required": ["current_emotion"]
-                        }
+                        "character_facts": CharacterFacts.json_schema()
                     },
-                    "required": ["message", "facts"]
+                    "required": ["message", "character_facts"]
                 }
             }
         }

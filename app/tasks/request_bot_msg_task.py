@@ -58,7 +58,7 @@ def request_bot_msg_task(chatroom_id: int, temperature=0.7) -> MsgInfo:
                 session.refresh(message)
                 
                 # 새로운 fact_snapshot 생성
-                new_fact = json_msg["character_facts"].get("newly_established_fact_on_character")
+                new_fact = json_msg["character_facts"].get("newly_established_fact_on_both_user_and_character")
                 if new_fact:
                     summary_response = await ai_request.summary(ai_model, new_fact, 0.5)
                     summary_dict = json.loads(summary_response)
