@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 import asyncio
 import redis
 import os
-from app.models.chat import SenderType
+from app.models.chat import SenderType, ChatProperty, ChatContent
 from app.repositories.chat_repository import ChatRepository
 from app.requests.thirdparty_ai_request import ThirdPartyAIRequest, PromptContext
 from app.task_models.msg_info import MsgInfo
@@ -49,14 +49,14 @@ def request_bot_msg_task(chatroom_id: int, temperature=0.7) -> MsgInfo:
                 ai_msg = await ai_request.chat(recent_messages, ai_model, temperature)
                 logger.info(f"Bot 메시지: {ai_msg}")
                 json_msg = json.loads(ai_msg)
-                content = {
-                    "text": json_msg["message"],
-                    "original_response": json_msg
-                }
-                message = chat_repository.create_chat(content, chatroom_id, chatroom.bot.id, SenderType.bot)
+
+                content = ChatContent(text=json_msg["message"], original_response=json_msg)
+                property = ChatProperty(emotion_hex_color=json_msg["character_facts"]["hex_color_of_current_emotion"])
+                message = chat_repository.create_chat(content.model_dump(), property.model_dump(), chatroom_id, chatroom.bot.id, SenderType.bot)
                 session.commit()
                 session.refresh(message)
                 
+
                 # 새로운 fact_snapshot 생성
                 new_fact = json_msg["character_facts"].get("newly_established_fact_on_both_user_and_character")
                 if new_fact:

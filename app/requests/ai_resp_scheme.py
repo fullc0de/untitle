@@ -5,7 +5,7 @@ from pydantic import BaseModel
 class CharacterFacts(BaseModel):
     name: Optional[str] = None
     gender: Optional[str] = None
-    current_emotion: str
+    hex_color_of_current_emotion: str
     relationship: Optional[str] = None
     interests: Optional[str] = None
     expertise: Optional[str] = None
@@ -36,9 +36,9 @@ class CharacterFacts(BaseModel):
                     "type": "string",
                     "description": "당신의 전문 분야 (직업, 특기, 지식)"
                 },
-                "current_emotion": {
+                "hex_color_of_current_emotion": {
                     "type": "string",
-                    "description": "현재 당신이 느끼는 감정"
+                    "description": "현재 당신이 느끼는 감정의 색깔 (예: #FF0000)"
                 },
                 "newly_established_fact_on_both_user_and_character": {
                     "type": "string",

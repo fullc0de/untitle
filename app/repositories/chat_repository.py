@@ -46,8 +46,8 @@ class ChatRepository:
         messages = self.session.exec(select(Chat).where(Chat.chatroom_id == chatroom_id).order_by(Chat.created_at.asc())).all()
         return messages
     
-    def create_chat(self, content: dict, chatroom_id: int, sender_id: int, sender_type: SenderType) -> Chat:
-        chat = Chat(content=content, chatroom_id=chatroom_id, sender_id=sender_id, sender_type=sender_type)
+    def create_chat(self, content: dict, property: dict, chatroom_id: int, sender_id: int, sender_type: SenderType) -> Chat:
+        chat = Chat(content=content, property=property, chatroom_id=chatroom_id, sender_id=sender_id, sender_type=sender_type)
         self.session.add(chat)
         self.session.flush()
         return chat

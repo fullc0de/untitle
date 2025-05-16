@@ -4,7 +4,7 @@ from sqlmodel import Session
 from app.services.enum import SenderType
 from app.repositories.chat_repository import ChatRepository
 from app.services.transaction_service import TransactionService
-from app.models import Chatroom, Chat, Bot
+from app.models import Chatroom, Chat, Bot, ChatContent
 from typing import List
 from app.tasks.request_bot_msg_task import request_bot_msg_task
 import logging
@@ -50,11 +50,9 @@ class ChatService(TransactionService):
     # def load_chatroom_attendees(self, chatroom: Chatroom) -> Chatroom:
     #     return self.chat_repository.session.refresh(chatroom, ["attendees"])
     
-    def make_turn(self, text: str, chatroom_id: int, sender_id: int, sender_type: SenderType) -> Chat:
-        content = {
-            "text": text
-            }
-        msg = self.chat_repository.create_chat(content, chatroom_id, sender_id, sender_type)
+    def make_turn(self, text: str, chatroom_id: int, sender_id: int) -> Chat:
+        content = ChatContent(text=text)
+        msg = self.chat_repository.create_chat(content.model_dump(), {}, chatroom_id, sender_id, SenderType.user)
         self.session.commit()
         request_bot_msg_task.delay(chatroom_id, 1.5)
         return msg

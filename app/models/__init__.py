@@ -1,5 +1,5 @@
 from sqlmodel import SQLModel
-from .chat import Chat
+from .chat import Chat, ChatContent, ChatProperty
 from .msg_embedding import MsgEmbedding
 from .user import User
 from .bot import Bot
@@ -12,6 +12,8 @@ from .fact_snapshot import FactSnapshot
 __all__ = [
     "SQLModel",
     "Chat",
+    "ChatContent",
+    "ChatProperty",
     "MsgEmbedding",
     "User",
     "Bot",

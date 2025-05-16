@@ -80,7 +80,7 @@ async def post_chats(
         logger.info(f"user message: {chat_param.text}")
         logger.info(f"chatroom_id: {chat_param.chatroom_id}")
         chat_service = ChatService(session, ChatRepository(session))
-        chat = chat_service.make_turn(chat_param.text, chat_param.chatroom_id, current_user.id, SenderType.user)
+        chat = chat_service.make_turn(chat_param.text, chat_param.chatroom_id, current_user.id)
         return ChatResp.from_orm(chat)
     except Exception as e:
         logger.error(f"Error in post_chats: {str(e)}")

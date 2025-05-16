@@ -14,16 +14,10 @@ class ChatroomPromptModifier(BaseModel):
     name: Optional[str] = None
     gender: Optional[str] = None
     relationship: Optional[str] = None
-    
-    def dict(self, *args, **kwargs):
-        return super().dict(*args, **kwargs)
 
 class ChatroomProperty(BaseModel):
     theme: Optional[str] = None
     settings: Optional[Dict[str, Any]] = None
-
-    def dict(self, *args, **kwargs):
-        return super().dict(*args, **kwargs)
 
 class Chatroom(SQLModel, table=True):
     __tablename__ = "chatrooms"
@@ -47,10 +41,10 @@ class Chatroom(SQLModel, table=True):
     # )
 
     def set_prompt_modifier(self, modifier: ChatroomPromptModifier):
-        self.prompt_modifier = modifier.dict()
+        self.prompt_modifier = modifier.model_dump()
 
     def set_property(self, property: ChatroomProperty):
-        self.property = property.dict()
+        self.property = property.model_dump()
 
     def get_prompt_modifier(self) -> Optional[ChatroomPromptModifier]:
         if self.prompt_modifier:
