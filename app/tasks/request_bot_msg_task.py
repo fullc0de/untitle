@@ -31,7 +31,7 @@ def request_bot_msg_task(chatroom_id: int, temperature=0.7) -> MsgInfo:
                 chat_repository = ChatRepository(session)
 
                 chatroom = chat_repository.get_chatroom_by_id(chatroom_id)
-                recent_messages = chat_repository.get_latest_messages(chatroom_id, 5)
+                recent_messages = chat_repository.get_latest_messages(chatroom_id, 7)
                 logger.info(f"recent_messages: {recent_messages.reverse()}")
 
                 latest_fact_snapshot = chat_repository.get_latest_fact_snapshot(chatroom_id)
