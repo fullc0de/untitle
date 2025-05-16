@@ -9,7 +9,8 @@ class CharacterFacts(BaseModel):
     relationship: Optional[str] = None
     interests: Optional[str] = None
     expertise: Optional[str] = None
-    newly_established_fact_on_both_user_and_character: Optional[str] = None
+    newly_established_fact_between_user_and_character: Optional[str] = None
+    main_topic_or_theme_on_conversation: Optional[str] = None
 
     @classmethod
     def json_schema(cls) -> Dict[str, Any]:
@@ -40,9 +41,13 @@ class CharacterFacts(BaseModel):
                     "type": "string",
                     "description": "현재 당신이 느끼는 감정의 색깔 (예: #FF0000)"
                 },
-                "newly_established_fact_on_both_user_and_character": {
+                "newly_established_fact_between_user_and_character": {
                     "type": "string",
                     "description": "당신과 유저 모두에 관련되어 새롭게 [합의, 정의, 부여, 발견]된 사실이나 정보"
+                },
+                "main_topic_or_theme_on_conversation": {
+                    "type": "string",
+                    "description": "현재 대화의 주제 또는 중심 테마"
                 }
             },
             "required": ["current_emotion"]
@@ -74,13 +79,6 @@ class CharacterJsonResponse(BaseModel):
             }
         }
 
-
-class CharacterResponse(BaseModel):
-    name: str
-    #attendee_id: Optional[int] = None
-    is_main_character: bool
-    is_storyteller: bool
-    message: str
 
 class ChatbotInfo(BaseModel):
     name: Optional[str] = None
@@ -124,55 +122,6 @@ class SummaryResponse(BaseModel):
                         "chatbot_info": ChatbotInfo.json_schema()
                     },
                     "required": ["facts_summary", "chatbot_info"]
-                }
-            }
-        }
-    
-class AIResponse(BaseModel):
-    messages: List[CharacterResponse]
-    summary: str
-
-    @classmethod
-    def json_schema(cls) -> Dict[str, Any]:
-        return {
-            "type": "json_schema",
-            "json_schema": {
-                "name": "ai_response",
-                "strict": True,
-                "schema": {
-                    "type": "object",
-                    "properties": {
-                        "messages": {
-                            "type": "array",
-                            "items": {
-                                "type": "object",
-                                "properties": {
-                                    "name": {
-                                        "type": "string",
-                                        "description": "캐릭터의 이름"
-                                    },
-                                    "is_main_character": {
-                                        "type": "boolean",
-                                        "description": "주인공 여부"
-                                    },
-                                    "is_storyteller": {
-                                        "type": "boolean",
-                                        "description": "내레이터 여부"
-                                    },
-                                    "message": {
-                                        "type": "string",
-                                        "description": "캐릭터의 메시지"
-                                    }
-                                },
-                                "required": ["name", "is_main_character", "is_storyteller", "message"]
-                            }
-                        },
-                        "summary": {
-                            "type": "string",
-                            "description": "대화 요약"
-                        }
-                    },
-                    "required": ["messages", "summary"]
                 }
             }
         }

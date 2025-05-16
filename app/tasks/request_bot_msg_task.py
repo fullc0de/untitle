@@ -31,7 +31,7 @@ def request_bot_msg_task(chatroom_id: int, temperature=0.7) -> MsgInfo:
                 chat_repository = ChatRepository(session)
 
                 chatroom = chat_repository.get_chatroom_by_id(chatroom_id)
-                recent_messages = chat_repository.get_latest_messages(chatroom_id, 7)
+                recent_messages = chat_repository.get_latest_messages(chatroom_id, 9)
                 logger.info(f"recent_messages: {recent_messages.reverse()}")
 
                 latest_fact_snapshot = chat_repository.get_latest_fact_snapshot(chatroom_id)
@@ -58,9 +58,11 @@ def request_bot_msg_task(chatroom_id: int, temperature=0.7) -> MsgInfo:
                 
 
                 # 새로운 fact_snapshot 생성
-                new_fact = json_msg["character_facts"].get("newly_established_fact_on_both_user_and_character")
-                if new_fact:
-                    summary_response = await ai_request.summary(ai_model, new_fact, 0.5)
+                new_fact = json_msg["character_facts"].get("newly_established_fact_between_user_and_character")
+                main_topic = json_msg["character_facts"].get("main_topic_or_theme_on_conversation")
+                if new_fact or main_topic:
+                    request = f"{new_fact}\n{main_topic}"
+                    summary_response = await ai_request.summary(ai_model, request, 0.5)
                     summary_dict = json.loads(summary_response)
                     logger.info(f"summary: {summary_dict}")
                     chat_repository.create_fact_snapshot(chatroom_id, message.id, summary_dict["chatbot_info"], summary_dict["facts_summary"])
