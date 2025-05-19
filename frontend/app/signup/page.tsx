@@ -18,7 +18,7 @@ export default function SignUp() {
     try {
       const response = await signUp(username, password);
       localStorage.setItem('token', response.token);
-      router.push('/');
+      router.push('/chatroom');
     } catch (error) {
       setError(error instanceof Error ? error.message : '회원가입에 실패했습니다.');
     }
