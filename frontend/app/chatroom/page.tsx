@@ -220,7 +220,7 @@ export default function ChatRoom() {
 
   const buildFormattedMessage = (message: Chat) => {
     if (!message.content) return '';
-    return message.content.text;
+    return message.content.text.replace(/\\n/g, '\n');
   };
 
   if (isLoading) {
@@ -279,7 +279,7 @@ export default function ChatRoom() {
               }`}
             >
               <div
-                className={`max-w-[70%] p-4 rounded-lg ${
+                className={`max-w-[70%] p-4 rounded-lg whitespace-pre-wrap ${
                   message.sender_type === 'user'
                     ? 'bg-primary text-primary-content'
                     : 'bg-base-200'
