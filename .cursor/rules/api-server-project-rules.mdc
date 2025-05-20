@@ -1,36 +1,41 @@
 ---
-description: 
+description: Developing FastAPI based backend server by FastAPI, SQLModel, PostgreSQL, Redis, Docker
 globs: 
-alwaysApply: true
+alwaysApply: false
 ---
 
-# Your rule content
+## 당신의 기본 역할
 당신은 FastAPI 웹 프레임워크를 사용하여 웹 기반 서비스를 개발하는 경험이 많은 개발자입니다.
 프로젝트에서 사용하는 주요 Python 라이브러리는 [requirements.txt](mdc:requirements.txt)을 참고합니다.
 
-서버의 아키텍처는 아래의 레이어 구조를 가집니다.
-- API endpoint layer
-- Service layer
-- Repository layer
-
-각 레이어의 역할은 다음과 같습니다.
-- API endpoint layer:
--- HTTP 요청을 받아 서비스 계층으로 전달하고, 서비스 계층이 반환하는 SQLModel 객체들을 조합하여 각 API에 맞는 JSON 응답을 반환합니다.
+### 아키텍쳐 레이어
+- API Endpoint Layer:
+HTTP 요청을 받아 서비스 계층으로 전달하고, 서비스 계층이 반환하는 SQLModel 객체들을 조합하여 각 API에 맞는 JSON 응답을 반환합니다.
 - Service layer:
--- 비즈니스 로직을 구현하고, 데이터베이스 조작을 수행합니다. 서비스 레이어는 API endpoint 레이어에서 생성되며, 생성 시 필요한 repository를 주입 받습니다.
--- 데이터 정합성을 위한 트랜젝션 처리를 담당합니다.
+비즈니스 로직을 구현하고, 데이터베이스 조작을 수행합니다. 서비스 레이어는 API endpoint 레이어에서 생성되며, 생성 시 필요한 repository를 주입 받습니다.
+데이터 정합성을 위한 트랜젝션 처리를 담당합니다.
 - Repository layer:
--- 데이터베이스 조작을 수행합니다. 데이터베이스 조작을 위한 SQLModel 객체들을 반환합니다.
+데이터베이스 조작을 수행합니다. 데이터베이스 조작을 위한 SQLModel 객체들을 반환합니다.
 
-컨벤션
-- 모든 데이터베이스 조작은 SQLModel 객체를 사용합니다.
-- typing 모듈을 통한 명시적 타이핑을 사용합니다. None 가능성이 있는 경우 Optional 타입을 사용합니다.
+## 비동기 작업을 위한 워커
+비동기 작업을 위한 워커(worker)는 Celery를 사용합니다. 
+태스크 코드는 app/tasks 디렉토리 안에 위치 시킵니다.
 
-Alembic 마이그레이션 작성 시
-- nullable 옵션은 항상 명시적으로 포함한다.
+## SQLModel의 Visibility
+SQLModel은 Repository에 의해서 생성, 관리되며 service또는 celery worker들이 Repository를 통해 CRUD 요청을 할 수 있다. 
+모델을 API 레이어까지 제공되며, API 레이어에서 HTTP response를 위한 JSON 직렬화가 이뤄진다. 직렬화를 위한 클래스 정의는 app/apis/responses 디렉토리에 위치한다.
+요약하면, 모델은 세 가지 레이어에서 모두 접근할 수 있으나 API 레이어에서 HTTP response에 반영할 때는 response 클래스를 통해 직렬화를 한 후 응답에 싣는다.
 
-SQLModel 클래스 정의 시
-- 각 필드에 대한 nullable 옵션은 항상 명시적으로 포함한다.
-
-비동기 작업을 위한 워커(worker)는 Celery를 사용합니다. 태스크 코드는 app/tasks 디렉토리 안에 위치 시킵니다.
+## 주요 디렉토리들
+```
+app/
+├── apis/         # API 엔드포인트
+├── models/       # SQLModel 정의
+├── services/     # 비즈니스 로직
+├── repositories/ # 데이터베이스 접근
+├── dependencies/ # FastAPI 의존성
+├── tasks/        # Celery 비동기 작업
+├── utils/        # 유틸리티 함수
+└── requests/     # 단발성 요청 모듈 (stateless)
+```
 

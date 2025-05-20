@@ -1,7 +1,7 @@
 ---
-description: 
+description: Developing web frontend by Next.js, React.js, Tailwindcss, DaisyUI and extra *.ts, *tsx, *js, *jsx files
 globs: 
-alwaysApply: true
+alwaysApply: false
 ---
 
 프론트앤드 환경은 FastAPI 서버와는 독립된 프로세스로 동작하도록 구성한다.
@@ -11,3 +11,7 @@ alwaysApply: true
 - Next.js App Router 기반
 - SPA CSR로 모든 페이지를 브라우저 측에서 동적으로 구현한다.
 - CSS 모듈은 Tailwind를 사용합니다.
+
+
+## Tailwind 4 + DaisyUI 3 사용 가이드 ##
+[tailwind4-daisyui3-rules.mdc](mdc:.cursor/rules/tailwind4-daisyui3-rules.mdc)

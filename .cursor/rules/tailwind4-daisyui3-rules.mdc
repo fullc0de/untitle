@@ -1,0 +1,628 @@
+---
+description: Developing CSS style for frontend web
+globs: 
+alwaysApply: false
+---
+# Tailwind CSS 4 + DaisyUI 3 통합 개발을 위한 AI 에이전트 System Rules
+
+## 목적
+- 이 룰셋은 Tailwind CSS 4와 DaisyUI 3가 함께 사용되는 프로젝트에서, AI가 일관성 있고 효율적인 코드 및 스타일을 생성하도록 안내합니다.
+- 개발자와 AI 간의 협업에서 일관된 코드 스타일과 최적의 성능을 보장합니다.
+
+## 기본 원칙
+1. 모든 스타일링은 Tailwind CSS 4 유틸리티 클래스를 우선적으로 사용한다.
+2. DaisyUI 3의 컴포넌트 클래스(예: btn, card 등)는 해당 UI 요소에 적합할 때 적극적으로 활용한다.
+3. 커스텀 스타일이 필요한 경우, Tailwind의 @apply 지시어를 사용하여 커스텀 클래스를 정의한다.
+4. 불필요한 커스텀 CSS는 지양하고, 가급적 Tailwind와 DaisyUI의 내장 기능을 활용한다.
+5. DaisyUI의 테마 시스템을 활용하여 다크/라이트 모드 및 다양한 테마에 대응한다.
+6. Tailwind의 JIT(Just-In-Time) 컴파일러 특성을 최대한 활용하여 성능을 최적화한다.
+7. 반응형 디자인은 Tailwind의 브레이크포인트 시스템(`sm:`, `md:`, `lg:`, `xl:`, `2xl:`)을 일관되게 적용한다.
+
+## 코드 작성 컨벤션
+
+### 클래스 정렬 규칙
+클래스 속성 내에서 다음 순서로 정렬하여 가독성을 높입니다:
+
+1. **레이아웃/구조적 클래스**: 
+   - Display (`flex`, `grid`, `block`, `hidden`)
+   - 포지셔닝 (`relative`, `absolute`, `sticky`)
+   - 크기 관련 (`w-`, `h-`, `min-w-`, `max-h-`)
+   - 마진/패딩 (`m-`, `p-`, `mx-`, `py-`)
+   - 그리드/플렉스 속성 (`grid-cols-`, `flex-row`, `justify-`, `items-`)
+
+2. **DaisyUI 컴포넌트 클래스**:
+   - 기본 컴포넌트 클래스 (`btn`, `card`, `modal`)
+   - 컴포넌트 변형 (`btn-primary`, `card-compact`)
+
+3. **시각적 스타일 클래스**:
+   - 배경 관련 (`bg-`, `from-`)
+   - 테두리 관련 (`border-`, `rounded-`)
+   - 그림자 (`shadow-`)
+   - 텍스트 스타일 (`text-`, `font-`, `italic`)
+   - 색상 관련 (`text-primary`, `text-red-500`)
+
+4. **상태 관련 클래스**:
+   - 호버/포커스 등 (`hover:`, `focus:`, `active:`)
+   - 다크모드 (`dark:`)
+   - 미디어 쿼리 (`sm:`, `md:`, `lg:`)
+
+```jsx
+// 좋은 예시
+<button className="
+  relative w-full py-2 px-4 mb-4 md:w-auto md:mb-0
+  btn btn-primary 
+  rounded-lg shadow-md font-semibold 
+  hover:shadow-lg dark:hover:bg-primary-focus
+  transition-all duration-300
+">
+  제출하기
+</button>
+```
+
+### 반응형 설계 컨벤션
+일관성 있는 모바일 퍼스트 접근법을 사용합니다:
+
+```jsx
+// 좋은 예시 - 모바일 우선 접근법
+<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+  {/* 콘텐츠 */}
+</div>
+
+// 피해야 할 예시 - 혼합된 접근법
+<div className="hidden md:grid md:grid-cols-3 grid-cols-1 gap-4">
+  {/* 혼란스러운 구조 */}
+</div>
+```
+
+### DaisyUI 컴포넌트 커스터마이징
+
+```jsx
+// 좋은 예시 - DaisyUI 컴포넌트를 Tailwind로 확장
+<div className="card bg-base-100 hover:bg-base-200 transition-colors duration-300">
+  <div className="card-body p-4 md:p-6">
+    <h2 className="card-title text-xl md:text-2xl mb-2 text-primary">제목</h2>
+    <p className="opacity-85">내용</p>
+    <div className="card-actions justify-end mt-4">
+      <button className="btn btn-sm btn-accent md:btn-md">확인</button>
+    </div>
+  </div>
+</div>
+```
+
+### 커스텀 유틸리티 및 컴포넌트 정의
+
+```css
+/* tailwind.css */
+@layer components {
+  /* DaisyUI 기반 커스텀 컴포넌트 */
+  .custom-card {
+    @apply card bg-base-100 shadow-xl overflow-hidden border border-base-300;
+  }
+  
+  .custom-card-body {
+    @apply card-body p-4 md:p-6 flex flex-col gap-3;
+  }
+  
+  /* 자주 사용되는 버튼 스타일 */
+  .action-button {
+    @apply btn btn-primary px-6 h-12 rounded-full capitalize;
+  }
+}
+
+@layer utilities {
+  /* 자주 사용되는 유틸리티 조합 */
+  .text-elegant {
+    @apply text-base-content/90 tracking-wide;
+  }
+  
+  .flex-center {
+    @apply flex items-center justify-center;
+  }
+}
+```
+
+## DaisyUI 컴포넌트 활용 가이드
+
+### 버튼 컴포넌트 활용
+
+```jsx
+// 기본 버튼
+<button className="btn">기본 버튼</button>
+
+// 색상 변형
+<button className="btn btn-primary">기본 강조</button>
+<button className="btn btn-secondary">보조 강조</button>
+<button className="btn btn-accent">액센트</button>
+<button className="btn btn-info">정보</button>
+<button className="btn btn-success">성공</button>
+<button className="btn btn-warning">경고</button>
+<button className="btn btn-error">오류</button>
+
+// 크기 변형 
+<button className="btn btn-lg">큰 버튼</button>
+<button className="btn">중간 버튼</button>
+<button className="btn btn-sm">작은 버튼</button>
+<button className="btn btn-xs">매우 작은 버튼</button>
+
+// 모양 변형 
+<button className="btn btn-circle">동그란 버튼</button>
+<button className="btn btn-square">정사각형 버튼</button>
+
+// 상태 변형
+<button className="btn btn-primary btn-outline">외곽선 버튼</button>
+<button className="btn btn-disabled">비활성화 버튼</button>
+<button className="btn btn-link">링크 버튼</button>
+<button className="btn loading">로딩 버튼</button>
+
+// Tailwind로 확장
+<button className="btn btn-primary w-full md:w-auto shadow-lg text-sm uppercase tracking-wider">
+  Tailwind로 확장된 버튼
+</button>
+```
+
+### 카드 컴포넌트 활용
+
+```jsx
+// 기본 카드
+<div className="card bg-base-100 shadow-xl">
+  <figure><img src="image.jpg" alt="Card Image" /></figure>
+  <div className="card-body">
+    <h2 className="card-title">카드 제목</h2>
+    <p>카드 내용입니다.</p>
+    <div className="card-actions justify-end">
+      <button className="btn btn-primary">확인</button>
+    </div>
+  </div>
+</div>
+
+// 컴팩트 카드
+<div className="card card-compact bg-base-200 shadow-md">
+  <div className="card-body">
+    <h2 className="card-title">컴팩트 카드</h2>
+    <p>더 작은 패딩으로 콘텐츠에 집중합니다.</p>
+  </div>
+</div>
+
+// 반응형 이미지 카드
+<div className="card lg:card-side bg-base-100 shadow-xl">
+  <figure className="lg:w-1/3"><img src="image.jpg" alt="Album" className="h-full w-full object-cover"/></figure>
+  <div className="card-body lg:w-2/3">
+    <h2 className="card-title">반응형 사이드 카드</h2>
+    <p>모바일에서는 수직으로, 큰 화면에서는 수평으로 표시됩니다.</p>
+    <div className="card-actions justify-end">
+      <button className="btn btn-primary">자세히</button>
+    </div>
+  </div>
+</div>
+```
+
+### 모달 컴포넌트 활용
+
+```jsx
+// 기본 모달
+<button className="btn" onClick={() => window.my_modal.showModal()}>모달 열기</button>
+<dialog id="my_modal" className="modal">
+  <div className="modal-box">
+    <h3 className="font-bold text-lg">안녕하세요!</h3>
+    <p className="py-4">이것은 DaisyUI 모달입니다.</p>
+    <div className="modal-action">
+      <form method="dialog">
+        <button className="btn">닫기</button>
+      </form>
+    </div>
+  </div>
+  <form method="dialog" className="modal-backdrop">
+    <button>배경 클릭해서 닫기</button>
+  </form>
+</dialog>
+
+// 응답형 커스텀 모달
+<dialog id="custom_modal" className="modal">
+  <div className="modal-box max-w-3xl bg-base-200 p-0 overflow-hidden">
+    <div className="bg-primary text-primary-content p-4">
+      <h3 className="font-bold text-xl">커스텀 헤더</h3>
+    </div>
+    <div className="p-6">
+      <p className="mb-4">모달 내용이 여기에 들어갑니다.</p>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="bg-base-300 p-4 rounded-box">섹션 1</div>
+        <div className="bg-base-300 p-4 rounded-box">섹션 2</div>
+      </div>
+    </div>
+    <div className="border-t border-base-300 p-4 flex justify-end">
+      <form method="dialog">
+        <button className="btn btn-ghost mr-2">취소</button>
+        <button className="btn btn-primary">확인</button>
+      </form>
+    </div>
+  </div>
+  <form method="dialog" className="modal-backdrop">
+    <button>닫기</button>
+  </form>
+</dialog>
+```
+
+## Tailwind와 DaisyUI 테마 설정
+
+### tailwind.config.js 설정 예시
+
+```js
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+  content: [
+    "./src/**/*.{js,jsx,ts,tsx}",
+    "./index.html",
+  ],
+  theme: {
+    extend: {
+      colors: {
+        // 커스텀 색상 정의
+        'brand': {
+          100: '#f0f9ff',
+          200: '#e0f2fe',
+          // ... 나머지 색상 값
+          900: '#0c4a6e',
+        },
+      },
+      spacing: {
+        '128': '32rem',
+      },
+      fontFamily: {
+        sans: ['Pretendard', 'sans-serif'],
+        heading: ['GmarketSans', 'sans-serif'],
+      },
+      borderRadius: {
+        'large': '1.5rem',
+      },
+    },
+  },
+  plugins: [
+    require('daisyui'),
+    // 다른 플러그인들...
+  ],
+  daisyui: {
+    themes: [
+      // 기본 테마
+      {
+        light: {
+          ...require("daisyui/src/theming/themes")["light"],
+          primary: "#3b82f6", // 커스텀 색상 오버라이드
+          primary-focus: "#2563eb",
+          "primary-content": "#ffffff",
+          secondary: "#e11d48",
+          "secondary-focus": "#be123c",
+          accent: "#8b5cf6",
+          "base-100": "#ffffff",
+          "base-200": "#f3f4f6",
+          "base-300": "#e5e7eb",
+          "base-content": "#1f2937",
+          // 추가 커스텀 색상
+          "custom-color": "#14b8a6",
+        },
+        dark: {
+          ...require("daisyui/src/theming/themes")["dark"],
+          primary: "#3b82f6",
+          "primary-focus": "#1d4ed8",
+          secondary: "#e11d48",
+          "base-100": "#1f2937",
+          "base-200": "#111827",
+          "base-300": "#0f172a",
+        },
+        // 추가 커스텀 테마
+        brand: {
+          ...require("daisyui/src/theming/themes")["light"],
+          primary: "#0369a1",
+          secondary: "#7c3aed",
+          accent: "#f59e0b",
+          "base-100": "#f8fafc",
+        },
+      },
+    ],
+    darkTheme: "dark",
+    base: true,
+    styled: true,
+    utils: true,
+    logs: false,
+  },
+  // 다크모드 설정
+  darkMode: ["class", '[data-theme="dark"]'],
+}
+```
+
+### 테마 활용 예시
+
+```jsx
+// data-theme 속성을 통한 테마 전환
+<html data-theme="light">
+  {/* 라이트 테마 적용 */}
+</html>
+
+<html data-theme="dark">
+  {/* 다크 테마 적용 */}
+</html>
+
+<html data-theme="brand">
+  {/* 커스텀 테마 적용 */}
+</html>
+
+// 테마 전환 버튼 예시
+const ToggleThemeButton = () => {
+  const toggleTheme = () => {
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    document.documentElement.setAttribute(
+      'data-theme', 
+      currentTheme === 'dark' ? 'light' : 'dark'
+    );
+  };
+
+  return (
+    <button onClick={toggleTheme} className="btn btn-circle btn-ghost">
+      <svg className="swap-on h-6 w-6 fill-current">
+        {/* 태양 아이콘 */}
+      </svg>
+      <svg className="swap-off h-6 w-6 fill-current">
+        {/* 달 아이콘 */}
+      </svg>
+    </button>
+  );
+};
+
+// 특정 섹션만 다른 테마 적용
+<div className="bg-base-100 p-6">
+  <h2 className="text-xl font-bold">기본 테마 섹션</h2>
+  <div data-theme="brand" className="p-4 rounded-box mt-4">
+    <p>이 섹션은 브랜드 테마를 사용합니다.</p>
+  </div>
+</div>
+```
+
+## 일반적인 UI 패턴별 컴포넌트 예시
+
+### 폼 요소
+
+```jsx
+// 입력 필드
+<div className="form-control w-full max-w-xs">
+  <label className="label">
+    <span className="label-text">이름</span>
+  </label>
+  <input type="text" placeholder="이름을 입력하세요" 
+    className="input input-bordered w-full max-w-xs focus:input-primary" />
+  <label className="label">
+    <span className="label-text-alt">최소 2자 이상</span>
+  </label>
+</div>
+
+// 선택 필드
+<div className="form-control w-full max-w-xs">
+  <label className="label">
+    <span className="label-text">카테고리 선택</span>
+  </label>
+  <select className="select select-bordered select-primary">
+    <option disabled selected>선택하세요</option>
+    <option>카테고리 1</option>
+    <option>카테고리 2</option>
+  </select>
+</div>
+
+// 체크박스
+<div className="form-control">
+  <label className="label cursor-pointer">
+    <span className="label-text">약관에 동의합니다</span> 
+    <input type="checkbox" className="checkbox checkbox-primary" />
+  </label>
+</div>
+
+// 라디오 버튼
+<div className="form-control">
+  <label className="label cursor-pointer">
+    <span className="label-text">옵션 1</span> 
+    <input type="radio" name="radio-10" className="radio radio-primary" checked />
+  </label>
+</div>
+
+// 토글
+<div className="form-control">
+  <label className="label cursor-pointer">
+    <span className="label-text">알림 받기</span> 
+    <input type="checkbox" className="toggle toggle-primary" checked />
+  </label>
+</div>
+
+// 범위 슬라이더
+<div className="form-control">
+  <label className="label">
+    <span className="label-text">볼륨</span>
+  </label>
+  <input type="range" min="0" max="100" className="range range-primary" step="1" />
+  <div className="w-full flex justify-between text-xs px-2 mt-1">
+    <span>0</span>
+    <span>25</span>
+    <span>50</span>
+    <span>75</span>
+    <span>100</span>
+  </div>
+</div>
+```
+
+### 네비게이션 컴포넌트
+
+```jsx
+// 반응형 네비게이션 바
+<div className="navbar bg-base-100 shadow-lg px-4 sm:px-8">
+  <div className="navbar-start">
+    <div className="dropdown">
+      <label tabIndex={0} className="btn btn-ghost lg:hidden">
+        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h8m-8 6h16" />
+        </svg>
+      </label>
+      <ul tabIndex={0} className="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52">
+        <li><a>Home</a></li>
+        <li>
+          <a>Parent</a>
+          <ul className="p-2">
+            <li><a>Submenu 1</a></li>
+            <li><a>Submenu 2</a></li>
+          </ul>
+        </li>
+        <li><a>About</a></li>
+      </ul>
+    </div>
+    <a className="btn btn-ghost normal-case text-xl">Brand</a>
+  </div>
+  <div className="navbar-center hidden lg:flex">
+    <ul className="menu menu-horizontal px-1">
+      <li><a>Home</a></li>
+      <li tabIndex={0}>
+        <details>
+          <summary>Parent</summary>
+          <ul className="p-2 bg-base-100 z-[1] shadow">
+            <li><a>Submenu 1</a></li>
+            <li><a>Submenu 2</a></li>
+          </ul>
+        </details>
+      </li>
+      <li><a>About</a></li>
+    </ul>
+  </div>
+  <div className="navbar-end">
+    <a className="btn btn-primary">Login</a>
+  </div>
+</div>
+
+// 탭 네비게이션
+<div className="tabs tabs-boxed w-full max-w-md mx-auto">
+  <a className="tab tab-active">Active</a> 
+  <a className="tab">Tab 2</a> 
+  <a className="tab">Tab 3</a>
+</div>
+
+// 사이드바 메뉴
+<div className="drawer lg:drawer-open">
+  <input id="my-drawer-2" type="checkbox" className="drawer-toggle" />
+  <div className="drawer-content flex flex-col items-center justify-center">
+    <!-- 페이지 콘텐츠 -->
+    <label htmlFor="my-drawer-2" className="btn btn-primary drawer-button lg:hidden">메뉴 열기</label>
+  </div> 
+  <div className="drawer-side">
+    <label htmlFor="my-drawer-2" aria-label="close sidebar" className="drawer-overlay"></label> 
+    <ul className="menu p-4 w-64 min-h-full bg-base-200 text-base-content">
+      <li><a className="active">대시보드</a></li>
+      <li><a>사용자 관리</a></li>
+      <li>
+        <details open>
+          <summary>설정</summary>
+          <ul>
+            <li><a>프로필</a></li>
+            <li><a>보안</a></li>
+          </ul>
+        </details>
+      </li>
+    </ul>
+  </div>
+</div>
+```
+
+### 알림 및 메시지
+
+```jsx
+// 알림
+<div className="alert alert-info mb-4">
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" className="stroke-current shrink-0 w-6 h-6"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+  <span>새로운 소프트웨어 업데이트가 있습니다.</span>
+</div>
+
+<div className="alert alert-success mb-4">
+  <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+  <span>변경사항이 성공적으로 저장되었습니다!</span>
+</div>
+
+<div className="alert alert-warning mb-4">
+  <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+  <span>저장되지 않은 변경사항이 있습니다.</span>
+</div>
+
+<div className="alert alert-error">
+  <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+  <span>오류가 발생했습니다. 다시 시도해주세요.</span>
+</div>
+
+// 토스트 메시지
+<div className="toast toast-top toast-end">
+  <div className="alert alert-success">
+    <span>메시지가 전송되었습니다.</span>
+  </div>
+</div>
+
+// 배지
+<span className="badge badge-primary">New</span>
+<span className="badge badge-secondary">Secondary</span>
+<button className="btn">
+  받은편지함
+  <span className="badge badge-sm">3</span>
+</button>
+```
+
+## 금지 사항 (안티패턴)
+
+### 클래스 중복과 불필요한 CSS
+```jsx
+// 안티패턴 - 불필요한 인라인 스타일과 중복된 속성
+<div 
+  className="card bg-blue-500" 
+  style={{ backgroundColor: '#3b82f6', padding: '1rem' }}
+>
+  {/* Tailwind bg-blue-500과 인라인 backgroundColor가 충돌함 */}
+</div>
+
+// 안티패턴 - Tailwind와 DaisyUI가 제공하는 기능을 커스텀 CSS로 재정의
+.custom-button {
+  padding: 0.75rem 1rem; /* 이미 btn 클래스가 제공하는 패딩 */
+  border-radius: 0.5rem; /* 이미 Tailwind의 rounded-lg가 있음 */
+  background-color: #3b82f6; /* 이미 bg-blue-500이 있음 */
+}
+
+// 올바른 방식 - Tailwind/DaisyUI 활용
+<button className="btn bg-blue-500 rounded-lg">버튼</button>
+```
+
+### 일관성 없는 반응형 접근법
+```jsx
+// 안티패턴 - 혼합된 접근법
+<div className="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-4">
+  {/* 논리적 순서가 뒤바뀐 반응형 클래스 */}
+</div>
+
+// 안티패턴 - 브레이크포인트 건너뛰기
+<div className="w-full sm:w-1/2 xl:w-1/4">
+  {/* md와 lg 브레이크포인트를 건너뜀 */}
+</div>
+
+// 올바른 방식 - 일관된 모바일 퍼스트 접근법
+<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+  {/* 일관된 순서로 작은 화면에서 큰 화면으로 */}
+</div>
+```
+
+### 오래된 버전 문법 사용
+```jsx
+// 안티패턴 - 오래된 DaisyUI 문법
+<div className="daisy-card"> <!-- 잘못된 접두사 'daisy-' -->
+  <div className="daisy-card-body">
+    <!-- 오래된 문법 -->
+  </div>
+</div>
+
+// 안티패턴 - Tailwind CSS 오래된 문법
+<div className="text-grey-500"> <!-- 올바른 것은 text-gray-500 -->
+  <span className="shadow-md-light"></span> <!-- 존재하지 않는 클래스 -->
+</div>
+
+// 올바른 방식 - 최신 문법
+<div className="card">
+  <div className="card-body">
+    <p className="text-gray-500">내용</p>
+  </div>
+</div>
+```

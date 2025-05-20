@@ -1,0 +1,80 @@
+---
+description: 
+globs: *.py
+alwaysApply: false
+---
+
+# FastAPI, SQLModel, Pydantic, Celery, Redis 사용 규칙
+
+## FastAPI (0.115.3)
+- FastAPI는 비동기 웹 프레임워크로, 모든 엔드포인트는 비동기 함수로 구현합니다.
+- 의존성 주입은 FastAPI의 Depends를 사용하여 구현합니다.
+- 응답 모델은 Pydantic 모델을 사용하여 명시적으로 정의합니다.
+- API 문서화는 자동으로 생성되는 Swagger UI (/docs)와 ReDoc (/redoc)을 활용합니다.
+- 미들웨어는 필요한 경우에만 사용하며, 성능에 영향을 고려합니다.
+
+### FastAPI 코딩 컨벤션
+- 엔드포인트 함수명은 HTTP 메서드를 접두어로 사용합니다 (예: get_items, create_item, update_item, delete_item).
+- 의존성 함수는 app/dependencies 디렉토리에 위치시킵니다.
+- 응답 상태 코드는 FastAPI의 status 모듈을 사용하여 명시적으로 지정합니다.
+- 쿼리 파라미터는 Pydantic 모델로 정의하여 검증합니다. (예외적으로 Form을 사용하는 경우도 허용합니다.)
+- 경로 파라미터는 타입 힌팅을 사용하여 명시적으로 정의합니다.
+
+### FastAPI 오류 처리
+- 커스텀 예외는 app/exceptions.py에 정의합니다.
+- HTTPException을 상속받아 비즈니스 로직 예외를 정의합니다.
+- 예외 핸들러는 app/exception_handlers.py에 정의합니다.
+- 400 Bad Request: 클라이언트 요청 오류
+- 401 Unauthorized: 인증 실패
+- 403 Forbidden: 권한 부족
+- 404 Not Found: 리소스 없음
+- 422 Unprocessable Entity: 요청 데이터 검증 실패
+- 500 Internal Server Error: 서버 내부 오류
+  
+## SQLModel (0.0.22)
+- 모든 데이터베이스 모델은 SQLModel을 상속받아 정의합니다.
+- 모델 정의 시 typing을 명시적으로 사용합니다.
+- nullable 필드는 Optional[Type]을 사용하여 정의합니다.
+- 관계 설정은 SQLModel의 Relationship을 사용합니다.
+- 쿼리는 SQLModel의 select()를 사용하여 작성합니다.
+
+## Pydantic (2.9.2)
+- 모든 데이터 검증은 Pydantic 모델을 사용합니다.
+- API 요청/응답 모델은 Pydantic BaseModel을 상속받아 정의합니다.
+- 커스텀 검증은 Pydantic의 validator 데코레이터를 사용합니다.
+- 환경 변수는 Pydantic의 BaseSettings를 사용하여 관리합니다.
+
+## Celery (5.3.6)
+- 비동기 작업은 Celery 태스크로 구현합니다.
+- 태스크 코드는 app/tasks 디렉토리에 위치시킵니다.
+- 태스크 함수는 @celery_app.task 데코레이터를 사용하여 정의합니다.
+- 태스크의 재시도 정책은 max_retries와 retry_backoff를 사용하여 설정합니다.
+- 태스크의 상태 추적은 Celery의 상태 모니터링 기능을 활용합니다.
+
+## Redis (5.0.1)
+- Redis는 Celery의 메시지 브로커, Worker(Celery)와 API(FastAPI)사이의 데이터 송수신 매체로 사용합니다.
+- Redis 연결은 connection pool을 사용하여 관리합니다.
+- Redis 키는 명명 규칙을 따라 일관성 있게 관리합니다.
+
+## 공통 규칙
+- 모든 비동기 함수는 async/await 문법을 사용합니다.
+- 예외 처리는 각 레이어에서 적절히 구현합니다.
+- 로깅은 Python의 logging 모듈을 사용하여 구현합니다.
+- 환경 변수는 .env 파일을 통해 관리합니다.
+- 타입 힌팅은 모든 함수와 변수에 적용합니다.
+
+### 코드 스타일
+- 함수와 변수명은 snake_case를 사용합니다.
+- 클래스명은 PascalCase를 사용합니다.
+- 상수는 UPPER_SNAKE_CASE를 사용합니다.
+- 타입 힌팅은 모든 함수와 변수에 적용합니다.
+- docstring은 Google 스타일을 사용합니다.
+- import 순서: 표준 라이브러리 > 서드파티 라이브러리 > 로컬 모듈
+- import 그룹 사이에 빈 줄을 추가합니다.
+
+### 테스트
+- 테스트는 pytest를 사용하여 작성합니다.
+- 테스트 파일은 test_ 접두어를 사용합니다.
+- 각 테스트는 독립적으로 실행 가능해야 합니다.
+- 테스트 데이터는 fixtures를 사용하여 관리합니다.
+- 통합 테스트는 실제 데이터베이스를 사용하지 않습니다.
