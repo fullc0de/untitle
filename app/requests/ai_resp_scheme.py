@@ -6,6 +6,7 @@ class CharacterFacts(BaseModel):
     name: Optional[str] = None
     gender: Optional[str] = None
     hex_color_of_current_emotion: str
+    kaomoji: str
     relationship: Optional[str] = None
     interests: Optional[str] = None
     expertise: Optional[str] = None
@@ -39,18 +40,22 @@ class CharacterFacts(BaseModel):
                 },
                 "hex_color_of_current_emotion": {
                     "type": "string",
-                    "description": "현재 당신이 느끼는 감정의 색깔 (예: #FF0000)"
+                    "description": "현재 당신이 느끼는 감정의 색깔. #으로 시작하는 6자리 HEX코드 (예: #FF0000)"
+                },
+                "kaomoji": {
+                    "type": "string",
+                    "description": "현재 당신이 느끼는 감정의 일본식 문자 이모티콘. 반드시 예시와 동일한 스타일을 사용한다. (예시: (´꒳`)♡, (￣▽￣*)ゞ, (˶ᵔ ᵕ ᵔ˶))"
                 },
                 "newly_established_fact_between_user_and_character": {
                     "type": "string",
-                    "description": "당신과 유저 모두에 관련되어 새롭게 [합의, 정의, 부여, 발견]된 사실이나 정보"
+                    "description": "당신과 유저 모두에 관련되어 새롭게 [합의, 정의, 부여, 발견]된 사실이나 역할 또는 행동 방식"
                 },
                 "main_topic_or_theme_on_conversation": {
                     "type": "string",
                     "description": "현재 대화의 주제 또는 중심 테마"
                 }
             },
-            "required": ["current_emotion"]
+            "required": ["hex_color_of_current_emotion", "text_kaomoji_of_current_emotion"]
         }
     
 

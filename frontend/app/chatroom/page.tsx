@@ -15,6 +15,7 @@ export default function ChatRoom() {
   const [isLoading, setIsLoading] = useState(true);
   const [showNewMessageToast, setShowNewMessageToast] = useState(false);
   const [latestMessage, setLatestMessage] = useState<Chat | null>(null);
+  const [headerColor, setHeaderColor] = useState('hsl(var(--b1))');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
@@ -50,7 +51,7 @@ export default function ChatRoom() {
       console.log('웹소켓 연결됨');
     });
 
-    socket.on('message', (data) => {
+    socket.on('message', (data: Chat) => {
       console.log('수신된 데이터:', data);
       // 현재 스크롤 위치 확인
       const isCurrentlyNearBottom = checkIfNearBottom();
@@ -75,6 +76,11 @@ export default function ChatRoom() {
 
       // 메시지 상태 업데이트
       setMessages(prevMessages => [...prevMessages, data]);
+
+      // 감정 색상 업데이트
+      if (data.property?.emotion_hex_color) {
+        setHeaderColor(data.property.emotion_hex_color);
+      }
     });
 
     socket.on('disconnect', () => {
@@ -165,6 +171,9 @@ export default function ChatRoom() {
         });
         
         setChatroomId(latestChatroom.id);
+        if (latestChatroom.property?.latest_emotion_color) {
+          setHeaderColor(latestChatroom.property.latest_emotion_color);
+        }
         loadMessages(latestChatroom.id);
       }
     } catch (error) {
@@ -179,6 +188,9 @@ export default function ChatRoom() {
       setIsLoading(true);
       const chatroom = await createChatroom();
       setChatroomId(chatroom.id);
+      if (chatroom.property?.latest_emotion_color) {
+        setHeaderColor(chatroom.property.latest_emotion_color);
+      }
       loadMessages(chatroom.id);
     } catch (error) {
       setError('채팅방 생성에 실패했습니다.');
@@ -254,11 +266,14 @@ export default function ChatRoom() {
   return (
     <main className="flex flex-col h-screen">
       {/* 상단 고정 영역 */}
-      <header className="sticky top-0 z-10 bg-base-100 shadow-sm">
-        <div className="flex justify-end p-4">
-          <button onClick={handleLogout} className="btn btn-ghost">
-            로그아웃
-          </button>
+      <header className="sticky top-0 z-10 border-b border-base-300 bg-base-100 shadow-sm flex flex-col">
+        <div className="flex flex-row">
+          <div className="flex-1"></div>
+          <div className="flex items-center px-4">
+            <button onClick={handleLogout} className="btn btn-ghost">
+              로그아웃
+            </button>
+          </div>
         </div>
 
         {error && (
@@ -276,10 +291,10 @@ export default function ChatRoom() {
               key={message.id}
               className={`flex ${
                 message.sender_type === 'user' ? 'justify-end' : 'justify-start'
-              }`}
+              } flex-row gap-4`}
             >
               <div
-                className={`max-w-[70%] p-4 rounded-lg whitespace-pre-wrap ${
+                className={`max-w-[75%] p-4 rounded-lg whitespace-pre-wrap ${
                   message.sender_type === 'user'
                     ? 'bg-primary text-primary-content'
                     : 'bg-base-200'
@@ -287,6 +302,16 @@ export default function ChatRoom() {
               >
                 {buildFormattedMessage(message)}
               </div>
+              
+              {message.sender_type !== 'user' && message.property?.emoticon && (
+                <div className="flex flex-col p-1">
+                  <div className="flex-1"></div>
+                  <div className="flex justify-end mt-2 text-lg animate-spring-scale">
+                    {message.property.emoticon}
+                  </div>
+                </div>
+              )}
+
             </div>
           ))}
           <div ref={messagesEndRef} />
@@ -294,7 +319,8 @@ export default function ChatRoom() {
       </div>
 
       {/* 하단 고정 입력 영역 */}
-      <footer className="sticky bottom-0 bg-base-100 border-t border-base-300">
+      <footer className="sticky bottom-0 bg-base-100 border-t border-base-300 flex flex-col">
+        <div className="h-2 transition-colors duration-1000" style={{ backgroundColor: headerColor }}></div>
         <div className="max-w-4xl mx-auto w-full p-4">
           <form onSubmit={handleSendMessage} className="flex gap-2">
             <input

@@ -16,7 +16,8 @@ class ChatContent(BaseModel):
     
 class ChatProperty(BaseModel):
     emotion_hex_color: Optional[str] = None
-
+    emoticon: Optional[str] = None
+    
 class Chat(SQLModel, table=True):
     __tablename__ = "chats"
 

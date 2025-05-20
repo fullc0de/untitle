@@ -5,9 +5,14 @@ from app.apis.responses.bot_resp import BotResp
 from app.models import Chatroom, Chat
 from app.apis.enum import SenderType
 
+class ChatroomPropertyResp(BaseModel):
+    emotion_hex_color: Optional[str] = None
+    emoticon: Optional[str] = None
+
 class ChatResp(BaseModel):
     id: int
     content: dict
+    property: Optional[ChatroomPropertyResp] = None
     chatroom_id: int
     sender_id: int
     sender_type: SenderType
@@ -26,5 +31,6 @@ class ChatResp(BaseModel):
             sender_id=chat.sender_id,
             sender_type=chat.sender_type,
             created_at=chat.created_at,
-            updated_at=chat.updated_at
+            updated_at=chat.updated_at,
+            property=ChatroomPropertyResp(**chat.property) if chat.property else None
         )

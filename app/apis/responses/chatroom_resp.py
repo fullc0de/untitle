@@ -4,10 +4,14 @@ from pydantic import BaseModel
 from app.apis.responses.bot_resp import BotResp
 from app.models.chatroom import Chatroom
 
+class ChatroomPropertyResp(BaseModel):
+    latest_emotion_color: Optional[str] = None
+    latest_emotion_text: Optional[str] = None
+
 class ChatroomResp(BaseModel):
     id: int
     title: Optional[str]
-    property: Optional[dict]
+    property: Optional[ChatroomPropertyResp]
     owner_id: int
     created_at: datetime
     updated_at: datetime
@@ -18,7 +22,7 @@ class ChatroomResp(BaseModel):
         return cls(
             id=chatroom.id,
             title=chatroom.title,
-            property=chatroom.property,
+            property=ChatroomPropertyResp(**chatroom.property) if chatroom.property else None,
             owner_id=chatroom.owner_id,
             created_at=chatroom.created_at,
             updated_at=chatroom.updated_at,

@@ -51,8 +51,17 @@ def request_bot_msg_task(chatroom_id: int, temperature=0.7) -> MsgInfo:
                 json_msg = json.loads(ai_msg)
 
                 content = ChatContent(text=json_msg["message"], original_response=json_msg)
-                property = ChatProperty(emotion_hex_color=json_msg["character_facts"]["hex_color_of_current_emotion"])
+                property = ChatProperty(
+                    emotion_hex_color=json_msg["character_facts"]["hex_color_of_current_emotion"],
+                    emoticon=json_msg["character_facts"]["kaomoji"]
+                )
                 message = chat_repository.create_chat(content.model_dump(), property.model_dump(), chatroom_id, chatroom.bot.id, SenderType.bot)
+                
+                chatroom_prop = chatroom.get_property()
+                chatroom_prop.latest_emotion_color = json_msg["character_facts"]["hex_color_of_current_emotion"]
+                chatroom_prop.latest_emotion_text = json_msg["character_facts"]["kaomoji"]
+                chatroom.set_property(chatroom_prop)
+
                 session.commit()
                 session.refresh(message)
                 
