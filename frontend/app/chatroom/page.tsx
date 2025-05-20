@@ -19,6 +19,7 @@ export default function ChatRoom() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const [isWaitingForBotMessage, setIsWaitingForBotMessage] = useState(false);
   const [autoScrollEnabled, setAutoScrollEnabled] = useState(true);
   
   const router = useRouter();
@@ -53,6 +54,7 @@ export default function ChatRoom() {
 
     socket.on('message', (data: Chat) => {
       console.log('수신된 데이터:', data);
+      setIsWaitingForBotMessage(false);
       // 현재 스크롤 위치 확인
       const isCurrentlyNearBottom = checkIfNearBottom();
             
@@ -222,11 +224,13 @@ export default function ChatRoom() {
 
     try {
       setAutoScrollEnabled(true);
+      setIsWaitingForBotMessage(true);
       const chat = await sendChat(chatroomId, newMessage);
       setMessages([...messages, chat]);
       setNewMessage('');
     } catch (error) {
       setError('메시지 전송에 실패했습니다.');
+      setIsWaitingForBotMessage(false);
     }
   };
 
@@ -306,7 +310,7 @@ export default function ChatRoom() {
               {message.sender_type !== 'user' && message.property?.emoticon && (
                 <div className="flex flex-col p-1">
                   <div className="flex-1"></div>
-                  <div className="flex justify-end mt-2 text-lg animate-spring-scale">
+                  <div className="flex justify-end mt-2 text-sm font-[500] animate-spring-scale font-notoSansJP">
                     {message.property.emoticon}
                   </div>
                 </div>
@@ -317,6 +321,19 @@ export default function ChatRoom() {
           <div ref={messagesEndRef} />
         </div>
       </div>
+
+      {/* 봇 응답 대기 메시지 */}
+      {isWaitingForBotMessage && (
+        <div className="px-4 py-2">
+          <div className="max-w-4xl mx-auto">
+            <div className="flex justify-start">
+              <div className="bg-base-200 p-4 rounded-lg">
+                <span className="rainbow-text">응답을 쓰는 중...</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 하단 고정 입력 영역 */}
       <footer className="sticky bottom-0 bg-base-100 border-t border-base-300 flex flex-col">
