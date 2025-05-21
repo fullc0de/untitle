@@ -15,7 +15,7 @@ export default function Home() {
       try {
         await getCurrentUser();
         setIsAuthenticated(true);
-        router.push('/chatroom');
+        router.push('/chatrooms');
       } catch (error) {
         setIsAuthenticated(false);
       } finally {
