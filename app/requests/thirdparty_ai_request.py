@@ -31,6 +31,10 @@ class AIRequest(ABC):
     def agent_role(self, is_bot: bool) -> str:
         pass
 
+    @abstractmethod
+    def build_message(self, chat: Chat) -> str:
+        pass
+
 class OpenRouterRequest(AIRequest):
     def __init__(self, model: str):
         self.api_key = os.getenv("OPENROUTER_API_KEY")
@@ -40,7 +44,13 @@ class OpenRouterRequest(AIRequest):
     async def chat(self, system_prompt: str, chats: List[Chat], temperature: float) -> Dict[str, Any]:
         formatted_messages = [
             {"role": "system", "content": system_prompt},
-            *[{"role": self.agent_role(chat.sender_type == SenderType.bot), "content": chat.content["text"]} for chat in chats]
+            *[
+                types.Content(
+                    role=self.agent_role(chat.sender_type == SenderType.bot),
+                    parts=[types.Part.from_text(text=self.build_message(chat))]
+                ) 
+                for chat in chats
+            ]
         ]
 
         try:
@@ -69,6 +79,9 @@ class OpenRouterRequest(AIRequest):
     def agent_role(self, is_bot: bool) -> str:
         return "assistant" if is_bot else "user"
     
+    def build_message(self, chat: Chat) -> str:
+        return chat.content["text"]
+    
 class OpenAIRequest(AIRequest):
     def __init__(self, model: str):
         self.api_key = os.getenv("OPENAI_API_KEY")
@@ -77,7 +90,13 @@ class OpenAIRequest(AIRequest):
     async def chat(self, system_prompt: str, chats: List[Chat], temperature: float) -> Dict[str, Any]:
         formatted_messages = [
             {"role": "system", "content": system_prompt},
-            *[{"role": self.agent_role(chat.sender_type == SenderType.bot), "content": chat.content["text"]} for chat in chats]
+            *[
+                types.Content(
+                    role=self.agent_role(chat.sender_type == SenderType.bot),
+                    parts=[types.Part.from_text(text=self.build_message(chat))]
+                ) 
+                for chat in chats
+            ]
         ]
 
         try:
@@ -103,6 +122,9 @@ class OpenAIRequest(AIRequest):
     def agent_role(self, is_bot: bool) -> str:
         return "assistant" if is_bot else "user"
 
+    def build_message(self, chat: Chat) -> str:
+        return chat.content["text"]
+    
 class ClaudeRequest(AIRequest):
     def __init__(self, model: str):
         self.api_key = os.getenv("ANTHROPIC_API_KEY")
@@ -110,7 +132,13 @@ class ClaudeRequest(AIRequest):
         
     async def chat(self, system_prompt: str, chats: List[Chat], temperature: float) -> Dict[str, Any]:
         formatted_messages = [
-            *[{"role": self.agent_role(chat.sender_type == SenderType.bot), "content": chat.content["text"]} for chat in chats]
+            *[
+                types.Content(
+                    role=self.agent_role(chat.sender_type == SenderType.bot),
+                    parts=[types.Part.from_text(text=self.build_message(chat))]
+                ) 
+                for chat in chats
+            ]
         ]
         try:
             logger.info(f"Claude API 요청: 최근 메시지 갯수: {len(formatted_messages)}")
@@ -134,6 +162,9 @@ class ClaudeRequest(AIRequest):
     def agent_role(self, is_bot: bool) -> str:
         return "assistant" if is_bot else "user"
 
+    def build_message(self, chat: Chat) -> str:
+        return chat.content["text"]
+
 class GeminiRequest(AIRequest):
     def __init__(self, model: str):
         self.api_key = os.getenv("GEMINI_API_KEY")
@@ -141,7 +172,13 @@ class GeminiRequest(AIRequest):
 
     async def chat(self, system_prompt: str, chats: List[Chat], temperature: float) -> Dict[str, Any]:
         formatted_messages = [
-            *[types.Content(role=self.agent_role(chat.sender_type == SenderType.bot), parts=[types.Part.from_text(text=chat.content["text"])]) for chat in chats]
+            *[
+                types.Content(
+                    role=self.agent_role(chat.sender_type == SenderType.bot),
+                    parts=[types.Part.from_text(text=self.build_message(chat))]
+                ) 
+                for chat in chats
+            ]
         ]
 
         try:
@@ -150,7 +187,7 @@ class GeminiRequest(AIRequest):
             client = genai.Client(api_key=self.api_key)
             assistant_message = await client.aio.models.generate_content(
                 #model= "gemini-2.0-flash",
-                model= "gemini-2.5-flash-preview-04-17",
+                model= "gemini-2.5-flash-preview-05-20",
                 contents=formatted_messages,
                 config=types.GenerateContentConfig(
                     system_instruction=system_prompt,
@@ -178,19 +215,20 @@ class GeminiRequest(AIRequest):
             logger.info(f"Gemini Completion API 요청: formatted_messages: {formatted_messages}")
             client = genai.Client(api_key=self.api_key)
             assistant_message = await client.aio.models.generate_content(
-                model= "gemini-2.5-flash-preview-04-17",
+                model= "gemini-2.0-flash-lite",
                 contents=formatted_messages,
                     config=types.GenerateContentConfig(
                         system_instruction=system_prompt,
                         temperature=temperature,
                         response_mime_type= "application/json",
-                        response_schema= SummaryResponse,
-                        thinking_config=types.ThinkingConfig(
-                            thinking_budget=0
-                        )
+                        response_schema= SummaryResponse
                     )
                 )
-            logger.info(f"Gemini Completion API 원본 응답: {assistant_message}")
+            logger.info(f"Gemini 요약 원본 응답: {assistant_message}")
+            logger.info(f"프롬프트 요약 토큰 수: {assistant_message.usage_metadata.prompt_token_count}")
+            logger.info(f"Output 요약 토큰 수: {assistant_message.usage_metadata.candidates_token_count}")
+            logger.info(f"총 요약 토큰 수: {assistant_message.usage_metadata.total_token_count}")
+
             return assistant_message.text
         except Exception as e:
             logger.error(f"Gemini Completion API 오류: {str(e)}")
@@ -198,6 +236,17 @@ class GeminiRequest(AIRequest):
 
     def agent_role(self, is_bot: bool) -> str:
         return "model" if is_bot else "user"
+    
+    def build_message(self, chat: Chat) -> str:
+        if chat.sender_type == SenderType.bot:
+            return chat.content["text"]
+        else:
+            timestamp = int(chat.created_at.timestamp())
+            temp = {
+                "message": chat.content["text"],
+                "created_timestamp": timestamp
+            }
+            return json.dumps(temp)
     
 class ThirdPartyAIRequest:
     def __init__(self, prompt_context: PromptContext):

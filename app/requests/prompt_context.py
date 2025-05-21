@@ -14,11 +14,11 @@ class PromptContext:
             return
 
         c_info = {
-            "이름": fact_snapshot.character_info["name"] if fact_snapshot.character_info["name"] is not None else "",
-            "성별": fact_snapshot.character_info["gender"] if fact_snapshot.character_info["gender"] is not None else "",
-            "관계": fact_snapshot.character_info["relationship"] if fact_snapshot.character_info["relationship"] is not None else "",
-            "관심사 키워드": ", ".join(fact_snapshot.character_info["interest_keywords"]) if fact_snapshot.character_info["interest_keywords"] is not None else "",
-            "전문분야 키워드": ", ".join(fact_snapshot.character_info["expertise_keywords"]) if fact_snapshot.character_info["expertise_keywords"] is not None else ""
+            "이름": fact_snapshot.character_info.get("name", ""),
+            "성별": fact_snapshot.character_info.get("gender", ""),
+            "관계": fact_snapshot.character_info.get("relationship", ""),
+            "관심사 키워드": ", ".join(fact_snapshot.character_info.get("interest_keywords", [])),
+            "전문분야 키워드": ", ".join(fact_snapshot.character_info.get("expertise_keywords", []))
         }
         self.chat_prompt_template = self.chat_prompt_template.format(
             character_info=c_info,
