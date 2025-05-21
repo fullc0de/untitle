@@ -28,22 +28,28 @@ export default function Home() {
 
   if (isLoading) {
     return (
-      <main className="flex min-h-screen flex-col items-center justify-center">
-        <div className="loading loading-spinner loading-lg"></div>
+      <main className="flex min-h-screen flex-col items-center justify-center bg-sn-bg">
+        <div className="loading loading-spinner loading-lg text-sn-primary"></div>
       </main>
     );
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-24">
-      <div className="card w-96 bg-base-100 shadow-xl">
+    <main className="flex min-h-screen flex-col items-center justify-center p-24 bg-sn-bg">
+      <div className="card w-96 bg-sn-text-dark shadow-sn rounded-sn border border-sn-border">
         <div className="card-body items-center text-center">
-          <h1 className="card-title text-4xl font-bold mb-8">환영합니다</h1>
+          <h1 className="card-title text-4xl font-bold mb-8 text-sn-text-light">환영합니다</h1>
           <div className="flex gap-4">
-            <Link href="/signup" className="btn btn-primary">
+            <Link 
+              href="/signup" 
+              className="btn bg-sn-primary hover:bg-sn-primary-600 text-sn-text-light shadow-sn-button rounded-sn-sm"
+            >
               Sign Up
             </Link>
-            <Link href="/signin" className="btn btn-secondary">
+            <Link 
+              href="/signin" 
+              className="btn bg-sn-secondary hover:bg-sn-secondary-600 text-sn-text-dark shadow-sn-sm rounded-sn-sm"
+            >
               Sign In
             </Link>
           </div>

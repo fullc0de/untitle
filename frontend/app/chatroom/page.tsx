@@ -241,22 +241,22 @@ export default function ChatRoom() {
 
   if (isLoading) {
     return (
-      <main className="flex min-h-screen flex-col items-center justify-center">
-        <div className="loading loading-spinner loading-lg"></div>
+      <main className="flex min-h-screen flex-col items-center justify-center bg-sn-bg">
+        <div className="loading loading-spinner loading-lg text-sn-primary"></div>
       </main>
     );
   }
 
   if (!chatroomId) {
     return (
-      <main className="flex min-h-screen flex-col items-center justify-center p-24">
-        <div className="card w-96 bg-base-100 shadow-xl">
+      <main className="flex min-h-screen flex-col items-center justify-center p-24 bg-sn-bg">
+        <div className="card w-96 bg-sn-text-dark shadow-sn rounded-sn border border-sn-border">
           <div className="card-body items-center text-center">
-            <h1 className="card-title text-2xl font-bold mb-4">새로운 대화 시작하기</h1>
-            <p className="mb-6">새로운 대화방을 만들어보세요</p>
+            <h1 className="card-title text-2xl font-bold mb-4 text-sn-text-light">새로운 대화 시작하기</h1>
+            <p className="mb-6 text-sn-text-mid">새로운 대화방을 만들어보세요</p>
             <button 
               onClick={handleCreateChatroom} 
-              className="btn btn-primary btn-lg"
+              className="btn bg-sn-primary hover:bg-sn-primary-600 text-sn-text-light shadow-sn-button rounded-sn-sm"
               disabled={isLoading}
             >
               대화방 만들기
@@ -268,20 +268,20 @@ export default function ChatRoom() {
   }
 
   return (
-    <main className="flex flex-col h-screen">
+    <main className="flex flex-col h-screen bg-sn-bg">
       {/* 상단 고정 영역 */}
-      <header className="sticky top-0 z-10 border-b border-base-300 bg-base-100 shadow-sm flex flex-col">
+      <header className="sticky top-0 z-10 border-b border-sn-border bg-sn-text-dark shadow-sn-sm flex flex-col">
         <div className="flex flex-row">
           <div className="flex-1"></div>
           <div className="flex items-center px-4">
-            <button onClick={handleLogout} className="btn btn-ghost">
+            <button onClick={handleLogout} className="btn btn-ghost text-sn-text-light hover:bg-sn-hover">
               로그아웃
             </button>
           </div>
         </div>
 
         {error && (
-          <div className="alert alert-error mx-4 mb-2">
+          <div className="alert alert-error mx-4 mb-2 bg-sn-accent-900 text-sn-text-light border-sn-accent">
             <span>{error}</span>
           </div>
         )}
@@ -298,10 +298,10 @@ export default function ChatRoom() {
               } flex-row gap-4`}
             >
               <div
-                className={`max-w-[75%] p-4 rounded-lg whitespace-pre-wrap ${
+                className={`max-w-[75%] p-4 rounded-sn whitespace-pre-wrap ${
                   message.sender_type === 'user'
-                    ? 'bg-primary text-primary-content'
-                    : 'bg-base-200'
+                    ? 'bg-sn-primary text-sn-text-light shadow-sn-button'
+                    : 'bg-sn-text-dark text-sn-text-light shadow-sn-sm border border-sn-border'
                 }`}
               >
                 {buildFormattedMessage(message)}
@@ -310,12 +310,11 @@ export default function ChatRoom() {
               {message.sender_type !== 'user' && message.property?.emoticon && (
                 <div className="flex flex-col p-1">
                   <div className="flex-1"></div>
-                  <div className="flex justify-end mt-2 text-sm font-[500] animate-spring-scale font-notoSansJP">
+                  <div className="flex justify-end mt-2 text-sm font-[500] animate-spring-scale font-notoSansJP text-sn-text-mid">
                     {message.property.emoticon}
                   </div>
                 </div>
               )}
-
             </div>
           ))}
           <div ref={messagesEndRef} />
@@ -327,7 +326,7 @@ export default function ChatRoom() {
         <div className="px-4 py-2">
           <div className="max-w-4xl mx-auto">
             <div className="flex justify-start">
-              <div className="bg-base-200 p-4 rounded-lg">
+              <div className="bg-sn-text-dark p-4 rounded-sn text-sn-text-light border border-sn-border shadow-sn-sm">
                 <span className="rainbow-text">응답을 쓰는 중...</span>
               </div>
             </div>
@@ -336,7 +335,7 @@ export default function ChatRoom() {
       )}
 
       {/* 하단 고정 입력 영역 */}
-      <footer className="sticky bottom-0 bg-base-100 border-t border-base-300 flex flex-col">
+      <footer className="sticky bottom-0 bg-sn-text-dark border-t border-sn-border flex flex-col">
         <div className="h-2 transition-colors duration-1000" style={{ backgroundColor: headerColor }}></div>
         <div className="max-w-4xl mx-auto w-full p-4">
           <form onSubmit={handleSendMessage} className="flex gap-2">
@@ -344,31 +343,31 @@ export default function ChatRoom() {
               type="text"
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
-              className="input input-bordered flex-1"
+              className="input input-bordered flex-1 bg-sn-text-dark border-sn-border text-sn-text-light"
               placeholder="메시지를 입력하세요..."
             />
-            <button type="submit" className="btn btn-primary">
+            <button type="submit" className="btn bg-sn-primary hover:bg-sn-primary-600 text-sn-text-light shadow-sn-button rounded-sn-sm">
               전송
             </button>
           </form>
         </div>
       </footer>
 
-      {/* 토스트 메시지 (스크롤과 독립적으로 표시) */}
+      {/* 토스트 메시지 */}
       {showNewMessageToast && latestMessage && (
         <div 
-          className="fixed bottom-20 left-1/2 transform -translate-x-1/2 bg-base-100 text-base-content p-3 rounded-lg shadow-lg cursor-pointer z-50 max-w-xs w-full border border-primary"
+          className="fixed bottom-20 left-1/2 transform -translate-x-1/2 bg-sn-text-dark text-sn-text-light p-3 rounded-sn shadow-sn cursor-pointer z-50 max-w-xs w-full border border-sn-primary"
           onClick={handleToastClick}
         >
           <div className="flex flex-col">
             <div className="flex justify-between items-center mb-1">
-              <span className="font-bold text-sm text-primary">새 메시지</span>
+              <span className="font-bold text-sm text-sn-primary">새 메시지</span>
               <button 
                 onClick={(e) => {
                   e.stopPropagation();
                   closeToast();
                 }}
-                className="text-xs text-gray-500 hover:text-gray-700"
+                className="text-xs text-sn-text-mid hover:text-sn-text-light"
               >
                 ✕
               </button>
