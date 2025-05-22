@@ -110,7 +110,7 @@ class ChatbotInfo(BaseModel):
         }
                 
 class SummaryResponse(BaseModel):
-    facts_summary: str
+    new_summary: str
     chatbot_info: ChatbotInfo
 
     @classmethod
@@ -123,10 +123,10 @@ class SummaryResponse(BaseModel):
                 "schema": {
                     "type": "object",
                     "properties": {
-                        "facts_summary": {"type": "string"},
+                        "new_summary": {"type": "string", "description": "새로운 요약"},
                         "chatbot_info": ChatbotInfo.json_schema()
                     },
-                    "required": ["facts_summary", "chatbot_info"]
+                    "required": ["new_summary", "chatbot_info"]
                 }
             }
         }

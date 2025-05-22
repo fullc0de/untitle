@@ -40,9 +40,9 @@ async def send_message_to_client(data):
     global connected_id
     if connected_id:
         try:
-            logger.info(f"메시지 전송 전: {data}")
+            # logger.info(f"메시지 전송 전: {data}")
             await sio.emit('message', data, room=connected_id)
-            logger.info(f"메시지 전송됨: {data}")
+            # logger.info(f"메시지 전송됨: {data}")
         except Exception as e:
             logger.error(f"메시지 전송 중 오류 발생: {str(e)}")
     else:

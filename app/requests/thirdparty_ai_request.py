@@ -215,13 +215,16 @@ class GeminiRequest(AIRequest):
             logger.info(f"Gemini Completion API 요청: formatted_messages: {formatted_messages}")
             client = genai.Client(api_key=self.api_key)
             assistant_message = await client.aio.models.generate_content(
-                model= "gemini-2.0-flash-lite",
+                model= "gemini-2.5-flash-preview-05-20",
                 contents=formatted_messages,
                     config=types.GenerateContentConfig(
                         system_instruction=system_prompt,
                         temperature=temperature,
                         response_mime_type= "application/json",
-                        response_schema= SummaryResponse
+                        response_schema= SummaryResponse,
+                        thinking_config=types.ThinkingConfig(
+                            thinking_budget=1024
+                        )
                     )
                 )
             logger.info(f"Gemini 요약 원본 응답: {assistant_message}")

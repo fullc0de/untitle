@@ -38,7 +38,7 @@ def request_bot_msg_task(chatroom_id: int, temperature=0.7) -> MsgInfo:
 
                 prompt_context = PromptContext()
                 prompt_context.chat_prompt_template = prompts.prompt_unknown_template_2
-                prompt_context.summary_prompt_template = prompts.prompt_template_summary
+                prompt_context.summary_prompt_template = prompts.prompt_template_summary_2
                 prompt_context.build(latest_fact_snapshot)
                 logger.info(f"chat_prompt_template: {prompt_context.chat_prompt_template}")
                 logger.info(f"summary_prompt_template: {prompt_context.summary_prompt_template}")
@@ -70,11 +70,16 @@ def request_bot_msg_task(chatroom_id: int, temperature=0.7) -> MsgInfo:
                 new_fact = json_msg["character_facts"].get("newly_established_fact_between_user_and_character")
                 main_topic = json_msg["character_facts"].get("main_topic_or_theme_on_conversation")
                 if new_fact or main_topic:
-                    request = f"{new_fact}\n{main_topic}"
-                    summary_response = await ai_request.summary(ai_model, request, 0.5)
+                    request = (
+                        f"기존 요약된 정보: "
+                        f"{latest_fact_snapshot.conversation_summary if latest_fact_snapshot.conversation_summary else '없음'}\n\n"
+                        f"새로운 정보: {new_fact or ''}\n"
+                        f"{main_topic or ''}"
+                    )
+                    summary_response = await ai_request.summary(ai_model, request, 0.2)
                     summary_dict = json.loads(summary_response)
                     logger.info(f"summary: {summary_dict}")
-                    chat_repository.create_fact_snapshot(chatroom_id, message.id, summary_dict["chatbot_info"], summary_dict["facts_summary"])
+                    chat_repository.create_fact_snapshot(chatroom_id, message.id, summary_dict["chatbot_info"], summary_dict["new_summary"])
                     session.commit()
                     session.refresh(message)
 

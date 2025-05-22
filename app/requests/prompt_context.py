@@ -10,7 +10,7 @@ class PromptContext:
     def build(self, fact_snapshot: Optional[FactSnapshot]) -> None:
         if fact_snapshot is None:
             self.chat_prompt_template = self.chat_prompt_template.format(character_info="없음", conversation_summary="없음")
-            self.summary_prompt_template = self.summary_prompt_template.format(current_summary="없음")
+            # self.summary_prompt_template = self.summary_prompt_template.format(current_summary="없음")
             return
 
         c_info = {
@@ -24,6 +24,6 @@ class PromptContext:
             character_info=c_info,
             conversation_summary=fact_snapshot.conversation_summary
         )
-        self.summary_prompt_template = self.summary_prompt_template.format(
-            current_summary=fact_snapshot.conversation_summary
-        )
+        # self.summary_prompt_template = self.summary_prompt_template.format(
+        #     current_summary=fact_snapshot.conversation_summary
+        # )
