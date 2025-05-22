@@ -33,6 +33,7 @@ export default function ChatroomPage() {
           getChats(chatroomId)
         ]);
         setChatroom(chatroomData);
+        console.log('chatsData', chatsData);
         setMessages(chatsData);
         if (chatroomData.property?.latest_emotion_color) {
           setHeaderColor(chatroomData.property.latest_emotion_color);
@@ -43,9 +44,13 @@ export default function ChatroomPage() {
         setLoading(false);
       }
     };
-
+    
+    if (process.env.NODE_ENV === 'development') {
+      console.log('chatroomId', chatroomId);
+    }
+    
     fetchData();
-  }, [chatroomId]);
+  }, []);
 
   // 웹소켓 연결 설정
   useEffect(() => {
@@ -98,7 +103,7 @@ export default function ChatroomPage() {
     return () => {
       socket.disconnect();
     };
-  }, [chatroomId]);
+  }, []);
 
   // 스크롤 위치를 확인하는 함수
   const checkIfNearBottom = () => {
@@ -132,6 +137,9 @@ export default function ChatroomPage() {
 
   // 메시지가 추가되면 스크롤 처리
   useEffect(() => {
+    if (messages.length == 0) {
+      return;
+    }
     if (isInitialLoad) {
       scrollToBottomInstantly();
       setIsInitialLoad(false);
@@ -272,7 +280,7 @@ export default function ChatroomPage() {
               type="text"
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              className="input input-bordered flex-1 bg-sn-text-dark border-sn-border text-sn-text-light"
+              className="input flex-1 bg-sn-text-dark border-sn-border text-sn-text-light"
               placeholder="메시지를 입력하세요..."
             />
             <button type="submit" className="btn bg-sn-primary hover:bg-sn-primary-600 text-sn-text-light shadow-sn-button rounded-sn-sm">
