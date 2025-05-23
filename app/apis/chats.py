@@ -47,6 +47,7 @@ def get_chatrooms(
     try:
         chat_service = ChatService(session, ChatRepository(session))
         chatrooms = chat_service.get_chatrooms_by_user_id(current_user.id)
+        chatrooms.sort(key=lambda x: x.updated_at, reverse=True)
         return [ChatroomResp.from_orm(chatroom) for chatroom in chatrooms]
     except Exception as e:
         logger.error(f"Error in get_chatrooms: {str(e)}")

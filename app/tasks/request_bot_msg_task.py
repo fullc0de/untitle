@@ -32,7 +32,8 @@ def request_bot_msg_task(chatroom_id: int, temperature=0.7) -> MsgInfo:
 
                 chatroom = chat_repository.get_chatroom_by_id(chatroom_id)
                 recent_messages = chat_repository.get_latest_messages(chatroom_id, 9)
-                logger.info(f"recent_messages: {recent_messages.reverse()}")
+                recent_messages.reverse()
+                logger.info(f"recent_messages: {recent_messages}")
 
                 latest_fact_snapshot = chat_repository.get_latest_fact_snapshot(chatroom_id)
 
@@ -44,7 +45,7 @@ def request_bot_msg_task(chatroom_id: int, temperature=0.7) -> MsgInfo:
                 logger.info(f"summary_prompt_template: {prompt_context.summary_prompt_template}")
 
                 ai_model = "gemini"
-                bot_name = latest_fact_snapshot.get_character_info().name
+                bot_name = latest_fact_snapshot.get_character_info().name if latest_fact_snapshot else "이름없음"
 
                 ai_request = ThirdPartyAIRequest(prompt_context)
                 ai_msg = await ai_request.chat(recent_messages, ai_model, temperature)
@@ -70,7 +71,7 @@ def request_bot_msg_task(chatroom_id: int, temperature=0.7) -> MsgInfo:
                 if new_fact or main_topic:
                     request = (
                         f"기존 요약된 정보: "
-                        f"{latest_fact_snapshot.conversation_summary if latest_fact_snapshot.conversation_summary else '없음'}\n\n"
+                        f"{latest_fact_snapshot.conversation_summary if latest_fact_snapshot and latest_fact_snapshot.conversation_summary else '없음'}\n\n"
                         f"새로운 정보: {new_fact or ''}\n"
                         f"{main_topic or ''}"
                     )

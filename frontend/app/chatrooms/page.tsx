@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Chatroom } from '../api/chat';
-import { getChatrooms } from '../api/chat';
+import { getChatrooms, createChatroom } from '../api/chat';
 import Link from 'next/link';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
@@ -12,6 +12,7 @@ export default function ChatroomsPage() {
   const [chatrooms, setChatrooms] = useState<Chatroom[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isCreating, setIsCreating] = useState(false);
 
   useEffect(() => {
     const fetchChatrooms = async () => {
@@ -27,6 +28,19 @@ export default function ChatroomsPage() {
 
     fetchChatrooms();
   }, []);
+
+  const handleCreateChatroom = async () => {
+    try {
+      setIsCreating(true);
+      // TODO: 채팅방 생성 API 호출
+      const newChatroom = await createChatroom(); // API 호출 결과
+      setChatrooms(prev => [newChatroom, ...prev]);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '채팅방 생성에 실패했습니다.');
+    } finally {
+      setIsCreating(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -82,14 +96,21 @@ export default function ChatroomsPage() {
           ))}
           
           {/* 새 채팅방 생성 카드 */}
-          <Link href="/chatrooms/new">
-            <div className="card h-48 cursor-pointer hover:shadow-lg transition-shadow bg-sn-bg-room-card">
-              <div className="card-body flex flex-col items-center justify-center">
-                <div className="text-4xl mb-2">+</div>
-                <div className="text-lg">추가하기</div>
-              </div>
+          <div 
+            className="card h-48 cursor-pointer hover:shadow-lg transition-shadow bg-sn-bg-room-card"
+            onClick={handleCreateChatroom}
+          >
+            <div className="card-body flex flex-col items-center justify-center">
+              {isCreating ? (
+                <span className="loading loading-spinner loading-lg"></span>
+              ) : (
+                <>
+                  <div className="text-4xl mb-2">+</div>
+                  <div className="text-lg">추가하기</div>
+                </>
+              )}
             </div>
-          </Link>
+          </div>
         </div>
       </div>
     </div>
