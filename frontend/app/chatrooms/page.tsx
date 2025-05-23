@@ -47,21 +47,31 @@ export default function ChatroomsPage() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen bg-sn-bg">
       <Header title="채팅방 목록" />
       <div className="container mx-auto p-4 flex-1">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {chatrooms.map((chatroom) => (
             <Link href={`/chatrooms/${chatroom.id}`} key={chatroom.id}>
               <div 
-                className="card h-48 cursor-pointer hover:shadow-lg transition-shadow"
-                style={{ backgroundColor: chatroom.property?.latest_emotion_color || '#ffffff' }}
+                className="card h-48 cursor-pointer hover:shadow-lg transition-shadow bg-sn-bg-room-card"
+                style={{ borderColor: chatroom.property?.latest_emotion_color || '#ffffff', borderWidth: '4px' }}
               >
-                <div className="card-body flex flex-col justify-between">
-                  <div className="flex-1 flex items-center justify-center">
+                <div className="card-body flex flex-col justify-between gap-4">
+                  <div className="flex-1 flex items-center justify-center flex-col gap-2">
+                    {chatroom.property?.bot_name && (
+                      <p className="text-lg text-center font-[500]">
+                        {chatroom.property.bot_name || '이름 없음'}
+                      </p>
+                    )}
                     <h2 className="text-xl font-semibold text-center">
                       {chatroom.property?.latest_emotion_text || '새로운 대화'}
                     </h2>
+                    {chatroom.property?.latest_message && (
+                      <p className="text-sm text-center line-clamp-2">
+                        {chatroom.property.latest_message}
+                      </p>
+                    )}
                   </div>
                   <div className="text-right text-sm text-gray-600">
                     {format(new Date(chatroom.updated_at), 'yyyy년 MM월 dd일 HH:mm', { locale: ko })}
@@ -73,7 +83,7 @@ export default function ChatroomsPage() {
           
           {/* 새 채팅방 생성 카드 */}
           <Link href="/chatrooms/new">
-            <div className="card h-48 cursor-pointer hover:shadow-lg transition-shadow bg-base-200">
+            <div className="card h-48 cursor-pointer hover:shadow-lg transition-shadow bg-sn-bg-room-card">
               <div className="card-body flex flex-col items-center justify-center">
                 <div className="text-4xl mb-2">+</div>
                 <div className="text-lg">추가하기</div>

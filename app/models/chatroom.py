@@ -16,8 +16,10 @@ class ChatroomPromptModifier(BaseModel):
     relationship: Optional[str] = None
 
 class ChatroomProperty(BaseModel):
+    bot_name: Optional[str] = None
     latest_emotion_color: Optional[str] = None
     latest_emotion_text: Optional[str] = None
+    latest_message: Optional[str] = None
 
 class Chatroom(SQLModel, table=True):
     __tablename__ = "chatrooms"

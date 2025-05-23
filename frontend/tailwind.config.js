@@ -72,6 +72,7 @@ module.exports = {
           
           // 배경 및 텍스트 색상
           'bg': '#1A1D24',        // 딥 차콜 배경
+          'bg-room-card': '#252830',
           'text': {
             'light': '#FFFFFF',   // 순수 화이트 텍스트
             'mid': '#B5B9C6',     // 미드톤 그레이 텍스트

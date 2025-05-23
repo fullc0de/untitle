@@ -44,10 +44,11 @@ def request_bot_msg_task(chatroom_id: int, temperature=0.7) -> MsgInfo:
                 logger.info(f"summary_prompt_template: {prompt_context.summary_prompt_template}")
 
                 ai_model = "gemini"
+                bot_name = latest_fact_snapshot.get_character_info().name
 
                 ai_request = ThirdPartyAIRequest(prompt_context)
                 ai_msg = await ai_request.chat(recent_messages, ai_model, temperature)
-                logger.info(f"Bot 메시지: {ai_msg}")
+                logger.info(f"AI Raw 메시지: {ai_msg}")
                 json_msg = json.loads(ai_msg)
 
                 content = ChatContent(text=json_msg["message"], original_response=json_msg)
@@ -55,17 +56,14 @@ def request_bot_msg_task(chatroom_id: int, temperature=0.7) -> MsgInfo:
                     emotion_hex_color=json_msg["character_facts"]["hex_color_of_current_emotion"],
                     emoticon=json_msg["character_facts"]["kaomoji"]
                 )
-                message = chat_repository.create_chat(content.model_dump(), property.model_dump(), chatroom_id, chatroom.bot.id, SenderType.bot)
-                
-                chatroom_prop = chatroom.get_property()
-                chatroom_prop.latest_emotion_color = json_msg["character_facts"]["hex_color_of_current_emotion"]
-                chatroom_prop.latest_emotion_text = json_msg["character_facts"]["kaomoji"]
-                chatroom.set_property(chatroom_prop)
-
-                session.commit()
-                session.refresh(message)
-                
-
+                message = chat_repository.create_chat(
+                    content.model_dump(), 
+                    property.model_dump(), 
+                    chatroom_id, 
+                    chatroom.bot.id, 
+                    SenderType.bot
+                )
+                                
                 # 새로운 fact_snapshot 생성
                 new_fact = json_msg["character_facts"].get("newly_established_fact_between_user_and_character")
                 main_topic = json_msg["character_facts"].get("main_topic_or_theme_on_conversation")
@@ -79,9 +77,25 @@ def request_bot_msg_task(chatroom_id: int, temperature=0.7) -> MsgInfo:
                     summary_response = await ai_request.summary(ai_model, request, 0.2)
                     summary_dict = json.loads(summary_response)
                     logger.info(f"summary: {summary_dict}")
-                    chat_repository.create_fact_snapshot(chatroom_id, message.id, summary_dict["chatbot_info"], summary_dict["new_summary"])
-                    session.commit()
-                    session.refresh(message)
+                    new_snapshot = chat_repository.create_fact_snapshot(
+                        chatroom_id, 
+                        message.id, 
+                        summary_dict["chatbot_info"], 
+                        summary_dict["new_summary"]
+                    )
+                    c_info = new_snapshot.get_character_info()
+                    bot_name = c_info.name
+
+                chatroom_prop = chatroom.get_property()
+                chatroom_prop.latest_emotion_color = json_msg["character_facts"]["hex_color_of_current_emotion"]
+                chatroom_prop.latest_emotion_text = json_msg["character_facts"]["kaomoji"]
+                chatroom_prop.latest_message = json_msg["message"]
+                chatroom_prop.bot_name = bot_name
+                chatroom.set_property(chatroom_prop)
+
+                session.commit()
+                session.refresh(message)
+                
 
                 # 메시지를 딕셔너리로 변환 후 JSON 직렬화
                 message_json = message.model_dump_json()

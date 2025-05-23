@@ -5,8 +5,10 @@ from app.apis.responses.bot_resp import BotResp
 from app.models.chatroom import Chatroom
 
 class ChatroomPropertyResp(BaseModel):
+    bot_name: Optional[str] = None
     latest_emotion_color: Optional[str] = None
     latest_emotion_text: Optional[str] = None
+    latest_message: Optional[str] = None
 
 class ChatroomResp(BaseModel):
     id: int
