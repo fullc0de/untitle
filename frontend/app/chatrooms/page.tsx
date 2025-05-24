@@ -44,8 +44,8 @@ export default function ChatroomsPage() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <span className="loading loading-spinner loading-lg"></span>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500 border-r-4 border-transparent"></div>
       </div>
     );
   }
@@ -74,17 +74,17 @@ export default function ChatroomsPage() {
                 <div className="card-body flex flex-col justify-between gap-4">
                   <div className="flex-1 flex items-center justify-center flex-col gap-2">
                     {chatroom.property?.bot_name && (
-                      <p className="text-lg text-center font-[500]">
-                        {chatroom.property.bot_name || '이름 없음'}
-                      </p>
+                      <div className="text-lg text-center font-[500] text-gray-100">
+                        {chatroom.property.bot_name}
+                      </div>
                     )}
-                    <h2 className="text-xl font-semibold text-center">
+                    <div className="text-xl font-semibold text-center text-gray-100">
                       {chatroom.property?.latest_emotion_text || '새로운 대화'}
-                    </h2>
+                    </div>
                     {chatroom.property?.latest_message && (
-                      <p className="text-sm text-center line-clamp-2">
+                      <div className="text-sm text-center line-clamp-2 text-gray-200">
                         {chatroom.property.latest_message}
-                      </p>
+                      </div>
                     )}
                   </div>
                   <div className="text-right text-sm text-gray-600">
@@ -102,11 +102,11 @@ export default function ChatroomsPage() {
           >
             <div className="card-body flex flex-col items-center justify-center">
               {isCreating ? (
-                <span className="loading loading-spinner loading-lg"></span>
+                <span className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500 border-r-4 border-transparent"></span>
               ) : (
                 <>
-                  <div className="text-4xl mb-2">+</div>
-                  <div className="text-lg">추가하기</div>
+                  <div className="text-6xl mb-2 text-sn-text-light">+</div>
+                  <div className="text-lg font-bold text-sn-text-mid">추가하기</div>
                 </>
               )}
             </div>
